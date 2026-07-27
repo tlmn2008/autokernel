@@ -37,9 +37,11 @@
     "fork_url": "https://github.com/tlmn2008/autokernel",
     "branch": "corex-port",
     "default_branch": "corex-port",
-    "default_branch_status": "not_attempted",
-    "push_commit": "",
-    "push_status": "pending"
+    "default_branch_status": "success",
+    "compare_url": "https://github.com/RightNow-AI/autokernel/compare/main...tlmn2008:corex-port",
+    "push_commit": "973b3ecef262584d0bfab26bf9f2b87ca79ad3c4",
+    "push_status": "success",
+    "pushed_at": "2026-07-27T22:25:00+08:00"
   },
   "local_logs": {
     "compile_log": "corex_port/build/compile.log",
