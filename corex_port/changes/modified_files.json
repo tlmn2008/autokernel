@@ -1,0 +1,38 @@
+{
+  "files": [
+    {
+      "path": "kernels/cuda/_compile.py",
+      "action": "edit",
+      "reason": "检测 CoreX(ivcore11)后翻译/去除 nvcc 专属编译 flag:去掉 --use_fast_math(clang -ffast-math 过激,破坏 fp32 精度)/ --expt-relaxed-constexpr / -lineinfo / -gencode=arch=sm_XX,补 -x ivcore;_get_arch_flags 在 CoreX 上返回空(arch 由 --cuda-gpu-arch=ivcore11 固定)。解决 clang++ 'unknown argument' 编译失败,是所有 CUDA 后端能编译的前提。"
+    },
+    {
+      "path": "kernels/cuda/matmul.py",
+      "action": "edit",
+      "reason": "ivcore11 的 ixix::wmma 不提供 NVIDIA 的 <16,16,16,__half> 张量核 fragment(仅有 <16,16,32,__half>/<16,16,16,float> 等形状),原 WMMA GEMM 编译报 'undefined template'。改写为可移植的共享内存分块 GEMM(fp16 输入、fp32 累加、fp16 输出),不依赖特定张量核 tile 形状,ivcore11 与 NVIDIA 均可运行,语义/接口不变。"
+    },
+    {
+      "path": "kernels/cuda/softmax.py",
+      "action": "edit",
+      "reason": "两处:(1) host 端 min() 改 std::min 并加 <algorithm>(CoreX clang 无全局 ::min);(2) fp16 half2 向量化路径在 n_cols 为奇数时,奇数行起始偏移非 4 字节对齐 → ivcore11 对未对齐 32 位读静默返错值 → NaN。奇数列改走标量路径规避。修复 vocab/edge 奇数列 NaN。"
+    },
+    {
+      "path": "kernels/cuda/rmsnorm.py",
+      "action": "edit",
+      "reason": "host 端 min()/max() 改 std::min/std::max 并加 <algorithm>(CoreX clang 无全局 ::min/::max),解决编译失败。"
+    },
+    {
+      "path": "kernels/cuda/rotary_embedding.py",
+      "action": "edit",
+      "reason": "host 端 min() 改 std::min 并加 <algorithm>(CoreX clang 无全局 ::min),解决编译失败。"
+    },
+    {
+      "path": "kernels/fused_mlp.py",
+      "action": "edit",
+      "reason": "triton 3.2+corex 无 tl.math.tanh,GELU 分支崩溃。用恒等式 tanh(z)=2*sigmoid(2z)-1 以 tl.sigmoid 重写,解决编译/运行崩溃。"
+    }
+  ],
+  "added_migration_artifacts": [
+    "corex_port/run_suite.py (测试驱动:18 组合 + 看门狗 + GPU 复位)",
+    "corex_port/prewarm.py (预热 CUDA JIT 编译缓存,规避 30s smoke 冷编译误判)"
+  ]
+}

@@ -1,0 +1,26 @@
+AutoKernel 无独立 AOT 构建步骤:GPU kernel 在运行时 JIT 编译。
+
+后端与编译方式:
+1. Triton 后端 (kernels/*.py):由 triton 3.2.0+corex 在首次调用时 JIT 编译到
+   ivcore11(无需手动命令)。
+2. CUDA C++ 后端 (kernels/cuda/*.py):经 torch.utils.cpp_extension.load_inline()
+   在首次调用时用 CoreX clang++ 编译。CoreX 实际编译命令形如:
+
+   /usr/local/corex/bin/clang++ -x ivcore -O3 -std=c++17 \
+       --cuda-gpu-arch=ivcore11 --cuda-path=/usr/local/corex \
+       -c cuda.cu -o cuda.cuda.o
+
+   (torch 自动追加 -D__ILUVATAR__ 等平台宏与 include 路径;
+    -x ivcore / --cuda-gpu-arch=ivcore11 由 kernels/cuda/_compile.py 与 corex torch
+    共同注入。)
+
+关键适配 (kernels/cuda/_compile.py):检测到 CoreX 后,把 nvcc 专属 flag
+(--use_fast_math / --expt-relaxed-constexpr / -lineinfo / -gencode=arch=...) 全部
+去除或翻译,并补 -x ivcore;arch 固定 ivcore11。
+
+预热:冷 JIT 编译约 34s/kernel,超过 bench.py smoke 阶段内置的 30s 超时,故先用
+corex_port/prewarm.py 预编译到 ~/.cache/autokernel/cuda_build 磁盘缓存,再跑
+bench.py,以反映真实运行时正确性(不修改测试 harness)。
+
+编译日志见 corex_port/build/compile.log(matmul CUDA kernel 的 verbose 编译示例)。
+编译面详情见 corex_port/build/compile_surface.json。

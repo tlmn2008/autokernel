@@ -88,8 +88,11 @@ def fused_gate_up_kernel(
         # SiLU(x) = x * sigmoid(x)
         gate_activated = acc_gate * tl.sigmoid(acc_gate)
     else:
-        # GELU approximation
-        gate_activated = 0.5 * acc_gate * (1.0 + tl.math.tanh(0.7978845608 * (acc_gate + 0.044715 * acc_gate * acc_gate * acc_gate)))
+        # GELU approximation.
+        # CoreX triton (3.2) has no tl.math.tanh; use tanh(z) = 2*sigmoid(2z) - 1.
+        _gelu_z = 0.7978845608 * (acc_gate + 0.044715 * acc_gate * acc_gate * acc_gate)
+        _gelu_tanh = 2.0 * tl.sigmoid(2.0 * _gelu_z) - 1.0
+        gate_activated = 0.5 * acc_gate * (1.0 + _gelu_tanh)
 
     result = gate_activated * acc_up
 

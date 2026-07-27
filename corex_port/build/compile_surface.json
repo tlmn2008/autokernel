@@ -1,0 +1,15 @@
+{
+  "note": "运行时 JIT 编译面(非测试计数)。所有 18 个 (kernel × backend) 组合在 CoreX ivcore11 上均编译成功。Triton 由 triton3.2+corex JIT;CUDA C++ 由 CoreX clang++ 经 load_inline 编译。",
+  "toolchain": "CoreX clang version 22.1.0git (4.5.0.20260630)",
+  "cuda_arch": "ivcore11",
+  "total_configs": 18,
+  "compiled_ok": 18,
+  "compile_failed": 0,
+  "triton_backend": {"kernels": 9, "compiled_ok": 9},
+  "cuda_backend": {"kernels": 9, "compiled_ok": 9},
+  "key_flag_fixes": [
+    "去除 nvcc 专属 --use_fast_math / --expt-relaxed-constexpr / -lineinfo / -gencode",
+    "补 -x ivcore(ivcore 设备编译模式)",
+    "host 端 min()/max() 改 std::min/std::max(CoreX clang 无全局 ::min/::max)"
+  ]
+}

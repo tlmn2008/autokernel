@@ -23,14 +23,46 @@ import torch
 
 _CACHE_DIR = os.path.join(os.path.expanduser("~"), ".cache", "autokernel", "cuda_build")
 
-# Default CUDA compiler flags
-_DEFAULT_CUDA_FLAGS = [
-    "-O3",
-    "--use_fast_math",
-    "-lineinfo",
-    "--expt-relaxed-constexpr",
-    "-std=c++17",
-]
+
+def _is_corex() -> bool:
+    """Detect the Iluvatar CoreX (ivcore11) toolchain.
+
+    CoreX uses a clang-based CUDA front-end that rejects several nvcc-only
+    flags (``--use_fast_math`` / ``--expt-relaxed-constexpr`` / ``-gencode``)
+    and needs ``-x ivcore`` instead of NVIDIA gencode/arch selection.
+    """
+    if "corex" in getattr(torch, "__version__", "").lower():
+        return True
+    if os.environ.get("COREX_PATH") or os.environ.get("COREX_ROOT"):
+        return True
+    return os.path.exists("/usr/local/corex/bin/clang++")
+
+
+_IS_COREX = _is_corex()
+
+# Default CUDA compiler flags.
+if _IS_COREX:
+    # CoreX clang front-end: translate the nvcc-only flags.
+    #   --use_fast_math      -> dropped: clang's -ffast-math is far more
+    #                           aggressive than nvcc's and broke fp32-precision
+    #                           correctness cases (e.g. layernorm fp32).
+    #   --expt-relaxed-constexpr / -lineinfo / -gencode -> dropped (no clang
+    #                           equivalent; arch is fixed to ivcore11 by the
+    #                           toolchain via --cuda-gpu-arch=ivcore11).
+    # ``-x ivcore`` is required so the .cu is compiled in ivcore device mode.
+    _DEFAULT_CUDA_FLAGS = [
+        "-x", "ivcore",
+        "-O3",
+        "-std=c++17",
+    ]
+else:
+    _DEFAULT_CUDA_FLAGS = [
+        "-O3",
+        "--use_fast_math",
+        "-lineinfo",
+        "--expt-relaxed-constexpr",
+        "-std=c++17",
+    ]
 
 # Module-level cache: {hash -> compiled module}
 _module_cache: dict = {}
@@ -44,6 +76,11 @@ _compile_lock = threading.Lock()
 def _get_arch_flags() -> list:
     """Generate -gencode flags for the current GPU architecture."""
     if not torch.cuda.is_available():
+        return []
+
+    # CoreX (ivcore11): NVIDIA -gencode/sm_XX flags are rejected by clang;
+    # the arch is fixed to ivcore11 by the toolchain, so emit nothing here.
+    if _IS_COREX:
         return []
 
     cap = torch.cuda.get_device_capability()

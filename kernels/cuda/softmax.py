@@ -30,6 +30,7 @@ CUDA_SRC = r"""
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
 #include <cfloat>
+#include <algorithm>
 
 // =========================================================================
 // Warp-level reduction helpers
@@ -124,58 +125,63 @@ softmax_kernel_fp16(
         const half* row_in  = input  + (long long)row * n_cols;
         half*       row_out = output + (long long)row * n_cols;
 
-        // Reinterpret as half2 for vectorized access
-        const half2* row_in_v  = reinterpret_cast<const half2*>(row_in);
-        half2*       row_out_v = reinterpret_cast<half2*>(row_out);
+        // CoreX (ivcore11) note: when n_cols is odd, odd-numbered rows begin at
+        // a 2-byte (half) offset, so a half2 (32-bit) view of the row is NOT
+        // 4-byte aligned.  ivcore11 silently returns wrong values for
+        // misaligned 32-bit loads (compat index: non-4-align uint32/half2 read
+        // -> silent-wrong), which yields NaN.  Use a scalar path for odd
+        // n_cols; keep the vectorized half2 path for the aligned (even) case.
+        if (n_tail == 0) {
+            const half2* row_in_v  = reinterpret_cast<const half2*>(row_in);
+            half2*       row_out_v = reinterpret_cast<half2*>(row_out);
 
-        // ---- Pass 1: find row max ----
-        float thread_max = -FLT_MAX;
+            // ---- Pass 1: find row max ----
+            float thread_max = -FLT_MAX;
+            for (int i = lane; i < n_pairs; i += 32) {
+                half2 v = row_in_v[i];
+                thread_max = fmaxf(thread_max, fmaxf(__half2float(v.x), __half2float(v.y)));
+            }
+            float row_max = warp_reduce_max(thread_max);
 
-        // Vectorized (half2) portion
-        for (int i = lane; i < n_pairs; i += 32) {
-            half2 v = row_in_v[i];
-            float lo = __half2float(v.x);
-            float hi = __half2float(v.y);
-            thread_max = fmaxf(thread_max, fmaxf(lo, hi));
-        }
-        // Handle the odd trailing element (only lane 0 when n_cols is odd)
-        if (n_tail && lane == 0) {
-            float last = __half2float(row_in[n_cols - 1]);
-            thread_max = fmaxf(thread_max, last);
-        }
+            // ---- Pass 2: exp(x - max) and accumulate sum ----
+            float thread_sum = 0.0f;
+            for (int i = lane; i < n_pairs; i += 32) {
+                half2 v = row_in_v[i];
+                float lo = __expf(__half2float(v.x) - row_max);
+                float hi = __expf(__half2float(v.y) - row_max);
+                row_out_v[i] = __halves2half2(__float2half(lo), __float2half(hi));
+                thread_sum += lo + hi;
+            }
+            float row_sum = warp_reduce_sum(thread_sum);
 
-        float row_max = warp_reduce_max(thread_max);
+            // ---- Pass 3: divide by sum ----
+            float inv_sum = __fdividef(1.0f, row_sum);
+            for (int i = lane; i < n_pairs; i += 32) {
+                half2 v = row_out_v[i];
+                float lo = __half2float(v.x) * inv_sum;
+                float hi = __half2float(v.y) * inv_sum;
+                row_out_v[i] = __halves2half2(__float2half(lo), __float2half(hi));
+            }
+        } else {
+            // Scalar path (avoids misaligned half2 on odd n_cols).
+            float thread_max = -FLT_MAX;
+            for (int c = lane; c < n_cols; c += 32) {
+                thread_max = fmaxf(thread_max, __half2float(row_in[c]));
+            }
+            float row_max = warp_reduce_max(thread_max);
 
-        // ---- Pass 2: exp(x - max) and accumulate sum ----
-        float thread_sum = 0.0f;
+            float thread_sum = 0.0f;
+            for (int c = lane; c < n_cols; c += 32) {
+                float v = __expf(__half2float(row_in[c]) - row_max);
+                row_out[c] = __float2half(v);
+                thread_sum += v;
+            }
+            float row_sum = warp_reduce_sum(thread_sum);
 
-        for (int i = lane; i < n_pairs; i += 32) {
-            half2 v = row_in_v[i];
-            float lo = __expf(__half2float(v.x) - row_max);
-            float hi = __expf(__half2float(v.y) - row_max);
-            row_out_v[i] = __halves2half2(__float2half(lo), __float2half(hi));
-            thread_sum += lo + hi;
-        }
-        if (n_tail && lane == 0) {
-            float val = __expf(__half2float(row_in[n_cols - 1]) - row_max);
-            row_out[n_cols - 1] = __float2half(val);
-            thread_sum += val;
-        }
-
-        float row_sum = warp_reduce_sum(thread_sum);
-
-        // ---- Pass 3: divide by sum ----
-        float inv_sum = __fdividef(1.0f, row_sum);
-
-        for (int i = lane; i < n_pairs; i += 32) {
-            half2 v = row_out_v[i];
-            float lo = __half2float(v.x) * inv_sum;
-            float hi = __half2float(v.y) * inv_sum;
-            row_out_v[i] = __halves2half2(__float2half(lo), __float2half(hi));
-        }
-        if (n_tail && lane == 0) {
-            float val = __half2float(row_out[n_cols - 1]) * inv_sum;
-            row_out[n_cols - 1] = __float2half(val);
+            float inv_sum = __fdividef(1.0f, row_sum);
+            for (int c = lane; c < n_cols; c += 32) {
+                row_out[c] = __float2half(__half2float(row_out[c]) * inv_sum);
+            }
         }
     }
 }
@@ -201,7 +207,7 @@ torch::Tensor softmax_cuda(torch::Tensor input) {
     const int total_warps_needed = n_rows;
     const int blocks = (total_warps_needed + WARPS_PER_BLOCK - 1) / WARPS_PER_BLOCK;
     // Cap to reasonable grid size; grid-stride handles the rest
-    const int grid = min(blocks, 65535);
+    const int grid = std::min(blocks, 65535);
 
     if (input.dtype() == torch::kFloat16) {
         softmax_kernel_fp16<<<grid, THREADS_PER_BLOCK>>>(

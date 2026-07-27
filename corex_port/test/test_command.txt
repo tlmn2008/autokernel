@@ -1,0 +1,32 @@
+测试范围与命令
+================
+
+AutoKernel 无 pytest/unittest 单元测试套件。其运行时"测试"是 bench.py 内置的
+5 阶段正确性校验(smoke / shape_sweep / numerical_stability / determinism /
+edge_cases),对每个 kernel 逐尺寸、逐 dtype 与 PyTorch reference(reference.py)
+对拍。这是本仓库完整的运行时正确性测试面。
+
+完整测试集 = 9 种 kernel × 2 后端(triton / cuda)= 18 个 (kernel, backend) 组合,
+每个组合完整跑 bench.py 的 5 阶段(非 --quick),以 bench.py 输出的最终
+`correctness:` 判定为该组合的 1 个运行时测试用例。
+
+驱动脚本(逐个切换 kernel.py 后运行 bench.py,带 420s 看门狗、超时后
+ixsmi -r 清残留):
+
+    # 先预热 CUDA JIT 编译缓存(避免 30s smoke 超时误判)
+    PYTHONPATH=. python3 corex_port/prewarm.py
+    # 跑完整 18 组合
+    python3 corex_port/run_suite.py all all
+
+单个组合等价于:
+    cp kernels/<k>.py kernel.py            # 或 kernels/cuda/<k>.py
+    python3 bench.py                       # 完整 5 阶段
+
+9 种 kernel:matmul, softmax, layernorm, rmsnorm, flash_attention, fused_mlp,
+cross_entropy, rotary_embedding, reduce。
+dtype:fp16 / bf16 / fp32(不含 fp64——仓库本身不使用 double)。
+
+逐用例完整输出见 test.log;结构化解析见 results.json。
+未运行 profile.py / extract.py / verify.py / orchestrate.py / kernelbench:这些是
+需下载模型权重/HF 数据集的流水线编排脚本,非运行时正确性测试,超出本次运行时
+测试范围(见 session_notes.md)。

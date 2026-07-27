@@ -1,0 +1,7 @@
+ kernels/cuda/_compile.py         |  53 ++++++++--
+ kernels/cuda/matmul.py           | 210 +++++++--------------------------------
+ kernels/cuda/rmsnorm.py          |   3 +-
+ kernels/cuda/rotary_embedding.py |   5 +-
+ kernels/cuda/softmax.py          | 112 +++++++++++----------
+ kernels/fused_mlp.py             |   7 +-
+ 6 files changed, 150 insertions(+), 240 deletions(-)

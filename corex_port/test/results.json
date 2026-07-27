@@ -1,0 +1,290 @@
+[
+  {
+    "kernel": "matmul",
+    "backend": "cuda",
+    "correctness": "FAIL",
+    "stages": {
+      "smoke_test": "PASS",
+      "shape_sweep": "FAIL",
+      "numerical_stability": "PASS",
+      "determinism": "PASS",
+      "edge_cases": "PASS"
+    },
+    "throughput_tflops": 0.699,
+    "speedup_vs_pytorch": 0.007,
+    "exit": 0,
+    "elapsed_s": 18.3
+  },
+  {
+    "kernel": "matmul",
+    "backend": "triton",
+    "correctness": "PASS",
+    "stages": {
+      "smoke_test": "PASS",
+      "shape_sweep": "PASS",
+      "numerical_stability": "PASS",
+      "determinism": "PASS",
+      "edge_cases": "PASS"
+    },
+    "throughput_tflops": 21.153,
+    "speedup_vs_pytorch": 0.226,
+    "exit": 0,
+    "elapsed_s": 10.3
+  },
+  {
+    "kernel": "softmax",
+    "backend": "cuda",
+    "correctness": "PASS",
+    "stages": {
+      "smoke_test": "PASS",
+      "shape_sweep": "PASS",
+      "numerical_stability": "PASS",
+      "determinism": "PASS",
+      "edge_cases": "PASS"
+    },
+    "throughput_tflops": 0.275,
+    "speedup_vs_pytorch": 0.721,
+    "exit": 0,
+    "elapsed_s": 9.2
+  },
+  {
+    "kernel": "softmax",
+    "backend": "triton",
+    "correctness": "PASS",
+    "stages": {
+      "smoke_test": "PASS",
+      "shape_sweep": "PASS",
+      "numerical_stability": "PASS",
+      "determinism": "PASS",
+      "edge_cases": "PASS"
+    },
+    "throughput_tflops": 0.631,
+    "speedup_vs_pytorch": 1.652,
+    "exit": 0,
+    "elapsed_s": 9.4
+  },
+  {
+    "kernel": "layernorm",
+    "backend": "cuda",
+    "correctness": "FAIL",
+    "stages": {
+      "smoke_test": "PASS",
+      "shape_sweep": "FAIL",
+      "numerical_stability": "PASS",
+      "determinism": "PASS",
+      "edge_cases": "FAIL"
+    },
+    "throughput_tflops": 0.359,
+    "speedup_vs_pytorch": 0.553,
+    "exit": 0,
+    "elapsed_s": 8.7
+  },
+  {
+    "kernel": "layernorm",
+    "backend": "triton",
+    "correctness": "FAIL",
+    "stages": {
+      "smoke_test": "PASS",
+      "shape_sweep": "FAIL",
+      "numerical_stability": "PASS",
+      "determinism": "PASS",
+      "edge_cases": "PASS"
+    },
+    "throughput_tflops": 0.867,
+    "speedup_vs_pytorch": 1.335,
+    "exit": 0,
+    "elapsed_s": 9.2
+  },
+  {
+    "kernel": "rmsnorm",
+    "backend": "cuda",
+    "correctness": "FAIL",
+    "stages": {
+      "smoke_test": "PASS",
+      "shape_sweep": "PASS",
+      "numerical_stability": "FAIL",
+      "determinism": "PASS",
+      "edge_cases": "PASS"
+    },
+    "throughput_tflops": 0.746,
+    "speedup_vs_pytorch": 4.7,
+    "exit": 0,
+    "elapsed_s": 7.8
+  },
+  {
+    "kernel": "rmsnorm",
+    "backend": "triton",
+    "correctness": "FAIL",
+    "stages": {
+      "smoke_test": "PASS",
+      "shape_sweep": "PASS",
+      "numerical_stability": "FAIL",
+      "determinism": "PASS",
+      "edge_cases": "PASS"
+    },
+    "throughput_tflops": 0.739,
+    "speedup_vs_pytorch": 4.658,
+    "exit": 0,
+    "elapsed_s": 8.3
+  },
+  {
+    "kernel": "flash_attention",
+    "backend": "cuda",
+    "correctness": "FAIL",
+    "stages": {
+      "smoke_test": "PASS",
+      "shape_sweep": "PASS",
+      "numerical_stability": "FAIL",
+      "determinism": "PASS",
+      "edge_cases": "PASS"
+    },
+    "throughput_tflops": 0.024,
+    "speedup_vs_pytorch": 0.005,
+    "exit": 0,
+    "elapsed_s": 136.0
+  },
+  {
+    "kernel": "flash_attention",
+    "backend": "triton",
+    "correctness": "FAIL",
+    "stages": {
+      "smoke_test": "PASS",
+      "shape_sweep": "PASS",
+      "numerical_stability": "FAIL",
+      "determinism": "PASS",
+      "edge_cases": "PASS"
+    },
+    "throughput_tflops": 6.18,
+    "speedup_vs_pytorch": 1.172,
+    "exit": 0,
+    "elapsed_s": 10.2
+  },
+  {
+    "kernel": "fused_mlp",
+    "backend": "cuda",
+    "correctness": "HANG",
+    "stages": {
+      "smoke_test": null,
+      "shape_sweep": null,
+      "numerical_stability": null,
+      "determinism": null,
+      "edge_cases": null
+    },
+    "throughput_tflops": null,
+    "speedup_vs_pytorch": null,
+    "exit": -9,
+    "elapsed_s": 420.3
+  },
+  {
+    "kernel": "fused_mlp",
+    "backend": "triton",
+    "correctness": "FAIL",
+    "stages": {
+      "smoke_test": "PASS",
+      "shape_sweep": "FAIL",
+      "numerical_stability": "PASS",
+      "determinism": "PASS",
+      "edge_cases": "PASS"
+    },
+    "throughput_tflops": 30.155,
+    "speedup_vs_pytorch": 0.421,
+    "exit": 0,
+    "elapsed_s": 10.9
+  },
+  {
+    "kernel": "cross_entropy",
+    "backend": "cuda",
+    "correctness": "PASS",
+    "stages": {
+      "smoke_test": "PASS",
+      "shape_sweep": "PASS",
+      "numerical_stability": "PASS",
+      "determinism": "PASS",
+      "edge_cases": "PASS"
+    },
+    "throughput_tflops": 0.53,
+    "speedup_vs_pytorch": 2.345,
+    "exit": 0,
+    "elapsed_s": 8.7
+  },
+  {
+    "kernel": "cross_entropy",
+    "backend": "triton",
+    "correctness": "PASS",
+    "stages": {
+      "smoke_test": "PASS",
+      "shape_sweep": "PASS",
+      "numerical_stability": "PASS",
+      "determinism": "PASS",
+      "edge_cases": "PASS"
+    },
+    "throughput_tflops": 0.965,
+    "speedup_vs_pytorch": 4.265,
+    "exit": 0,
+    "elapsed_s": 9.1
+  },
+  {
+    "kernel": "rotary_embedding",
+    "backend": "cuda",
+    "correctness": "FAIL",
+    "stages": {
+      "smoke_test": "FAIL",
+      "shape_sweep": "SKIP",
+      "numerical_stability": "SKIP",
+      "determinism": "SKIP",
+      "edge_cases": "SKIP"
+    },
+    "throughput_tflops": 0.572,
+    "speedup_vs_pytorch": 21.115,
+    "exit": 0,
+    "elapsed_s": 8.4
+  },
+  {
+    "kernel": "rotary_embedding",
+    "backend": "triton",
+    "correctness": "FAIL",
+    "stages": {
+      "smoke_test": "FAIL",
+      "shape_sweep": "SKIP",
+      "numerical_stability": "SKIP",
+      "determinism": "SKIP",
+      "edge_cases": "SKIP"
+    },
+    "throughput_tflops": 0.203,
+    "speedup_vs_pytorch": 7.487,
+    "exit": 0,
+    "elapsed_s": 8.9
+  },
+  {
+    "kernel": "reduce",
+    "backend": "cuda",
+    "correctness": "PASS",
+    "stages": {
+      "smoke_test": "PASS",
+      "shape_sweep": "PASS",
+      "numerical_stability": "PASS",
+      "determinism": "PASS",
+      "edge_cases": "PASS"
+    },
+    "throughput_tflops": 0.217,
+    "speedup_vs_pytorch": 1.296,
+    "exit": 0,
+    "elapsed_s": 7.7
+  },
+  {
+    "kernel": "reduce",
+    "backend": "triton",
+    "correctness": "PASS",
+    "stages": {
+      "smoke_test": "PASS",
+      "shape_sweep": "PASS",
+      "numerical_stability": "PASS",
+      "determinism": "PASS",
+      "edge_cases": "PASS"
+    },
+    "throughput_tflops": 0.277,
+    "speedup_vs_pytorch": 1.646,
+    "exit": 0,
+    "elapsed_s": 8.4
+  }
+]
