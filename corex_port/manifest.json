@@ -33,6 +33,19 @@
     "softmax/cuda fp16 half2 在奇数列因非对齐访问静默出错(NaN) → 标量 fallback(已解决)",
     "CUDA kernel 冷 JIT 编译 ~34s 超过 bench.py smoke 30s 看门狗 → prewarm 预热(已解决)"
   ],
+  "upstream_assessment": {
+    "upstreamable": "partial",
+    "nvidia_compatible": "broken",
+    "notes": "_compile.py 的 flag 翻译由 _is_corex() 守卫;但 matmul.py 将 nvcuda::wmma 张量核 GEMM 就地改写为可移植 shared-memory tiled GEMM(无条件生效)，拿到 NVIDIA 上会失去张量核路径(行为/性能改变)，回上游需改为条件后端。softmax/rmsnorm/rotary 的 std::min/max+<algorithm> 为通用可移植修复可单独回上游。剩余失败为平台无关的上游数值/容差特性。本仓无 fork remote，未推送。"
+  },
+  "bugfixes": [
+    {
+      "file": "kernels/cuda/{softmax,rmsnorm,rotary_embedding}.py",
+      "description": "host 端裸 min()/max() 依赖非标准全局重载且缺 #include <algorithm>，clang 前端编译失败;补 include 并改用 std::min/std::max。属可移植性缺陷，对 nvcc 无害。",
+      "upstream_worthy": true,
+      "status": "fixed_local"
+    }
+  ],
   "github": {
     "fork_url": "https://github.com/tlmn2008/autokernel",
     "branch": "corex-port",
