@@ -1,0 +1,16 @@
+{
+  "note": "运行时 JIT 编译面(非测试计数)。所有 18 个 (kernel × backend) 组合在 CoreX ivcore11 上均编译成功。Triton 由 triton3.2+corex JIT;CUDA C++ 由 CoreX clang++ 经 load_inline 编译。",
+  "toolchain": "CoreX clang version 22.1.0git (4.5.0.20260630)",
+  "cuda_arch": "ivcore11",
+  "total_configs": 18,
+  "compiled_ok": 18,
+  "compile_failed": 0,
+  "triton_backend": {"kernels": 9, "compiled_ok": 9},
+  "cuda_backend": {"kernels": 9, "compiled_ok": 9},
+  "key_flag_fixes": [
+    "去除 nvcc 专属 --use_fast_math / --expt-relaxed-constexpr / -lineinfo / -gencode(仅 CoreX 分支;NVIDIA 分支原样保留)",
+    "补 -x ivcore(ivcore 设备编译模式)与守卫宏 -DAUTOKERNEL_COREX=1",
+    "host 端 min()/max() 改 std::min/std::max(无条件可移植性 bugfix,对 nvcc 无害)"
+  ],
+  "guard_note": "corex-port-guarded 分支:matmul(tiled GEMM)与 softmax(奇数列标量 fallback)的 CoreX 变体均在 #if defined(AUTOKERNEL_COREX) 守卫内;编译命令 [2/3] 含 -DAUTOKERNEL_COREX=1。默认(非 CoreX)编译不下发该宏,走原 nvcuda::wmma / half2 向量化路径。"
+}

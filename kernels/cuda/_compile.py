@@ -23,14 +23,55 @@ import torch
 
 _CACHE_DIR = os.path.join(os.path.expanduser("~"), ".cache", "autokernel", "cuda_build")
 
-# Default CUDA compiler flags
-_DEFAULT_CUDA_FLAGS = [
-    "-O3",
-    "--use_fast_math",
-    "-lineinfo",
-    "--expt-relaxed-constexpr",
-    "-std=c++17",
-]
+
+def _is_corex() -> bool:
+    """Detect the Iluvatar CoreX (ivcore11) clang-based CUDA toolchain.
+
+    Returns True only when we are building against CoreX; on stock
+    NVIDIA/nvcc systems this stays False and every CoreX-specific branch
+    below is skipped, leaving the upstream flags/paths byte-for-byte intact.
+    """
+    if "corex" in getattr(torch, "__version__", "").lower():
+        return True
+    if os.environ.get("USE_COREX") or os.environ.get("COREX_PATH") or os.environ.get("COREX_ROOT"):
+        return True
+    return os.path.exists("/usr/local/corex/bin/clang++")
+
+
+def _default_cuda_flags(is_corex: bool) -> list:
+    """Return the default device-compiler flags for the active toolchain.
+
+    Pure function of ``is_corex`` so the NVIDIA branch stays verifiable even on
+    a CoreX host (see corex_port/test/test_guard_noninvasive.py).
+    """
+    if is_corex:
+        # CoreX clang front-end: translate the nvcc-only flags.
+        #   --use_fast_math      -> dropped: clang's -ffast-math is far more
+        #                           aggressive than nvcc's and broke fp32-precision
+        #                           correctness cases (e.g. layernorm fp32).
+        #   --expt-relaxed-constexpr / -lineinfo / -gencode -> dropped (no clang
+        #                           equivalent; arch is fixed to ivcore11 by the
+        #                           toolchain via --cuda-gpu-arch=ivcore11).
+        # ``-x ivcore`` compiles the .cu in ivcore device mode; ``-DAUTOKERNEL_COREX``
+        # activates the CoreX-guarded kernel variants (see matmul.py / softmax.py).
+        return [
+            "-x", "ivcore",
+            "-O3",
+            "-std=c++17",
+            "-DAUTOKERNEL_COREX=1",
+        ]
+    # Upstream NVIDIA / nvcc flags — unchanged from the original repo.
+    return [
+        "-O3",
+        "--use_fast_math",
+        "-lineinfo",
+        "--expt-relaxed-constexpr",
+        "-std=c++17",
+    ]
+
+
+_IS_COREX = _is_corex()
+_DEFAULT_CUDA_FLAGS = _default_cuda_flags(_IS_COREX)
 
 # Module-level cache: {hash -> compiled module}
 _module_cache: dict = {}
@@ -41,9 +82,17 @@ _compile_lock = threading.Lock()
 # Architecture detection
 # ---------------------------------------------------------------------------
 
-def _get_arch_flags() -> list:
+def _get_arch_flags(is_corex: bool = None) -> list:
     """Generate -gencode flags for the current GPU architecture."""
+    if is_corex is None:
+        is_corex = _IS_COREX
     if not torch.cuda.is_available():
+        return []
+
+    # CoreX (ivcore11): NVIDIA -gencode/sm_XX flags are rejected by clang and
+    # the arch is fixed to ivcore11 by the toolchain, so emit nothing here.
+    # The NVIDIA path below is unchanged.
+    if is_corex:
         return []
 
     cap = torch.cuda.get_device_capability()

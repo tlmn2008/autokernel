@@ -21,6 +21,14 @@ import torch
 import triton
 import triton.language as tl
 
+# Some Triton builds (e.g. CoreX / ivcore11 Triton 3.2) do not expose
+# ``tl.math.tanh``.  Detect it once at import time and select the native
+# intrinsic when available; otherwise fall back to the mathematically
+# equivalent identity tanh(z) = 2*sigmoid(2z) - 1.  This is a compile-time
+# constant, so the upstream ``tl.math.tanh`` path is preserved unchanged on
+# NVIDIA where the intrinsic exists.
+_HAS_TL_TANH = hasattr(tl, "math") and hasattr(tl.math, "tanh")
+
 
 @triton.jit
 def fused_gate_up_kernel(
@@ -89,7 +97,13 @@ def fused_gate_up_kernel(
         gate_activated = acc_gate * tl.sigmoid(acc_gate)
     else:
         # GELU approximation
-        gate_activated = 0.5 * acc_gate * (1.0 + tl.math.tanh(0.7978845608 * (acc_gate + 0.044715 * acc_gate * acc_gate * acc_gate)))
+        _gelu_z = 0.7978845608 * (acc_gate + 0.044715 * acc_gate * acc_gate * acc_gate)
+        if _HAS_TL_TANH:
+            _gelu_tanh = tl.math.tanh(_gelu_z)
+        else:
+            # CoreX triton (3.2) has no tl.math.tanh; use tanh(z)=2*sigmoid(2z)-1.
+            _gelu_tanh = 2.0 * tl.sigmoid(2.0 * _gelu_z) - 1.0
+        gate_activated = 0.5 * acc_gate * (1.0 + _gelu_tanh)
 
     result = gate_activated * acc_up
 

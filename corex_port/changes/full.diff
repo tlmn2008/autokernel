@@ -1,0 +1,382 @@
+diff --git a/kernels/cuda/_compile.py b/kernels/cuda/_compile.py
+index 4c665c8..11feaa7 100644
+--- a/kernels/cuda/_compile.py
++++ b/kernels/cuda/_compile.py
+@@ -23,14 +23,55 @@ import torch
+ 
+ _CACHE_DIR = os.path.join(os.path.expanduser("~"), ".cache", "autokernel", "cuda_build")
+ 
+-# Default CUDA compiler flags
+-_DEFAULT_CUDA_FLAGS = [
+-    "-O3",
+-    "--use_fast_math",
+-    "-lineinfo",
+-    "--expt-relaxed-constexpr",
+-    "-std=c++17",
+-]
++
++def _is_corex() -> bool:
++    """Detect the Iluvatar CoreX (ivcore11) clang-based CUDA toolchain.
++
++    Returns True only when we are building against CoreX; on stock
++    NVIDIA/nvcc systems this stays False and every CoreX-specific branch
++    below is skipped, leaving the upstream flags/paths byte-for-byte intact.
++    """
++    if "corex" in getattr(torch, "__version__", "").lower():
++        return True
++    if os.environ.get("USE_COREX") or os.environ.get("COREX_PATH") or os.environ.get("COREX_ROOT"):
++        return True
++    return os.path.exists("/usr/local/corex/bin/clang++")
++
++
++def _default_cuda_flags(is_corex: bool) -> list:
++    """Return the default device-compiler flags for the active toolchain.
++
++    Pure function of ``is_corex`` so the NVIDIA branch stays verifiable even on
++    a CoreX host (see corex_port/test/test_guard_noninvasive.py).
++    """
++    if is_corex:
++        # CoreX clang front-end: translate the nvcc-only flags.
++        #   --use_fast_math      -> dropped: clang's -ffast-math is far more
++        #                           aggressive than nvcc's and broke fp32-precision
++        #                           correctness cases (e.g. layernorm fp32).
++        #   --expt-relaxed-constexpr / -lineinfo / -gencode -> dropped (no clang
++        #                           equivalent; arch is fixed to ivcore11 by the
++        #                           toolchain via --cuda-gpu-arch=ivcore11).
++        # ``-x ivcore`` compiles the .cu in ivcore device mode; ``-DAUTOKERNEL_COREX``
++        # activates the CoreX-guarded kernel variants (see matmul.py / softmax.py).
++        return [
++            "-x", "ivcore",
++            "-O3",
++            "-std=c++17",
++            "-DAUTOKERNEL_COREX=1",
++        ]
++    # Upstream NVIDIA / nvcc flags — unchanged from the original repo.
++    return [
++        "-O3",
++        "--use_fast_math",
++        "-lineinfo",
++        "--expt-relaxed-constexpr",
++        "-std=c++17",
++    ]
++
++
++_IS_COREX = _is_corex()
++_DEFAULT_CUDA_FLAGS = _default_cuda_flags(_IS_COREX)
+ 
+ # Module-level cache: {hash -> compiled module}
+ _module_cache: dict = {}
+@@ -41,11 +82,19 @@ _compile_lock = threading.Lock()
+ # Architecture detection
+ # ---------------------------------------------------------------------------
+ 
+-def _get_arch_flags() -> list:
++def _get_arch_flags(is_corex: bool = None) -> list:
+     """Generate -gencode flags for the current GPU architecture."""
++    if is_corex is None:
++        is_corex = _IS_COREX
+     if not torch.cuda.is_available():
+         return []
+ 
++    # CoreX (ivcore11): NVIDIA -gencode/sm_XX flags are rejected by clang and
++    # the arch is fixed to ivcore11 by the toolchain, so emit nothing here.
++    # The NVIDIA path below is unchanged.
++    if is_corex:
++        return []
++
+     cap = torch.cuda.get_device_capability()
+     major, minor = cap
+     sm = f"{major}{minor}"
+diff --git a/kernels/cuda/matmul.py b/kernels/cuda/matmul.py
+index 6aab4ff..1e0ee92 100644
+--- a/kernels/cuda/matmul.py
++++ b/kernels/cuda/matmul.py
+@@ -17,6 +17,14 @@ The agent can change anything in this file:
+   - Memory layout, swizzling, prefetch strategy
+   - Accumulation precision, epilogue fusion
+   - Any CUDA intrinsic or PTX instruction
++
++CoreX (ivcore11) port note (non-invasive):
++  Iluvatar ivcore11 does not provide the NVIDIA __half 16x16x16 wmma fragment
++  used by the tensor-core path.  Rather than replacing that path, a portable
++  shared-memory tiled GEMM variant is added behind ``#if defined(AUTOKERNEL_COREX)``
++  (the macro is only set by kernels/cuda/_compile.py when the CoreX toolchain is
++  detected).  On stock NVIDIA/nvcc the macro is undefined, so the original
++  nvcuda::wmma kernel in the ``#else`` branch compiles byte-for-byte unchanged.
+ """
+ 
+ KERNEL_TYPE = "matmul"
+@@ -29,6 +37,55 @@ CUDA_SRC = r"""
+ #include <torch/extension.h>
+ #include <cuda_runtime.h>
+ #include <cuda_fp16.h>
++
++#if defined(AUTOKERNEL_COREX)
++// =========================================================================
++// CoreX (ivcore11) variant: portable shared-memory tiled GEMM.
++// ixix::wmma lacks the __half 16x16x16 fragment used by the NVIDIA tensor-core
++// path (see #else), so on CoreX we select this portable tiled GEMM
++// (fp16 in/out, fp32 accumulation).  Same launcher signature / semantics.
++// =========================================================================
++constexpr int TILE = 16;
++
++__global__ void matmul_kernel_tiled(
++    const half* __restrict__ A,
++    const half* __restrict__ B,
++    half* __restrict__ C,
++    int M, int N, int K
++) {
++    __shared__ half As[TILE][TILE];
++    __shared__ half Bs[TILE][TILE];
++
++    const int row = blockIdx.y * TILE + threadIdx.y;
++    const int col = blockIdx.x * TILE + threadIdx.x;
++
++    float acc = 0.0f;
++
++    const int k_tiles = (K + TILE - 1) / TILE;
++    for (int kt = 0; kt < k_tiles; ++kt) {
++        const int a_col = kt * TILE + threadIdx.x;
++        const int b_row = kt * TILE + threadIdx.y;
++
++        As[threadIdx.y][threadIdx.x] =
++            (row < M && a_col < K) ? A[row * K + a_col] : __float2half(0.0f);
++        Bs[threadIdx.y][threadIdx.x] =
++            (b_row < K && col < N) ? B[b_row * N + col] : __float2half(0.0f);
++
++        __syncthreads();
++
++        #pragma unroll
++        for (int k = 0; k < TILE; ++k) {
++            acc += __half2float(As[threadIdx.y][k]) * __half2float(Bs[k][threadIdx.x]);
++        }
++        __syncthreads();
++    }
++
++    if (row < M && col < N) {
++        C[row * N + col] = __float2half(acc);
++    }
++}
++
++#else
+ #include <mma.h>
+ 
+ using namespace nvcuda;
+@@ -207,6 +264,8 @@ matmul_kernel_wmma(
+     }
+ }
+ 
++#endif  // AUTOKERNEL_COREX
++
+ torch::Tensor matmul_cuda(torch::Tensor A, torch::Tensor B) {
+     TORCH_CHECK(A.is_cuda(), "A must be a CUDA tensor");
+     TORCH_CHECK(B.is_cuda(), "B must be a CUDA tensor");
+@@ -219,6 +278,17 @@ torch::Tensor matmul_cuda(torch::Tensor A, torch::Tensor B) {
+ 
+     auto C = torch::empty({M, N}, A.options());
+ 
++#if defined(AUTOKERNEL_COREX)
++    dim3 block(TILE, TILE);
++    dim3 grid((N + TILE - 1) / TILE, (M + TILE - 1) / TILE);
++
++    matmul_kernel_tiled<<<grid, block>>>(
++        reinterpret_cast<const half*>(A.data_ptr<at::Half>()),
++        reinterpret_cast<const half*>(B.data_ptr<at::Half>()),
++        reinterpret_cast<half*>(C.data_ptr<at::Half>()),
++        M, N, K
++    );
++#else
+     dim3 grid((M + BLOCK_M - 1) / BLOCK_M, (N + BLOCK_N - 1) / BLOCK_N);
+     dim3 block(256);  // 8 warps
+ 
+@@ -228,6 +298,7 @@ torch::Tensor matmul_cuda(torch::Tensor A, torch::Tensor B) {
+         reinterpret_cast<half*>(C.data_ptr<at::Half>()),
+         M, N, K
+     );
++#endif
+ 
+     return C;
+ }
+diff --git a/kernels/cuda/rmsnorm.py b/kernels/cuda/rmsnorm.py
+index 6add27a..d61aca9 100644
+--- a/kernels/cuda/rmsnorm.py
++++ b/kernels/cuda/rmsnorm.py
+@@ -29,6 +29,7 @@ CUDA_SRC = r"""
+ #include <torch/extension.h>
+ #include <cuda_runtime.h>
+ #include <cuda_fp16.h>
++#include <algorithm>
+ 
+ // One block per row. Each thread handles multiple elements along N.
+ // Reduction: warp shuffle + shared memory across warps.
+@@ -142,7 +143,7 @@ torch::Tensor rmsnorm_cuda(torch::Tensor x, torch::Tensor weight) {
+ 
+     // Choose block size: enough threads to cover N with vectorized loads
+     // Each thread handles 2 elements, so we need N/2 threads minimum, up to 1024
+-    int threads = min(1024, max(32, ((N + 1) / 2 + 31) / 32 * 32));
++    int threads = std::min(1024, std::max(32, ((N + 1) / 2 + 31) / 32 * 32));
+ 
+     dim3 grid(M);
+     dim3 block(threads);
+diff --git a/kernels/cuda/rotary_embedding.py b/kernels/cuda/rotary_embedding.py
+index b2c7997..370da5e 100644
+--- a/kernels/cuda/rotary_embedding.py
++++ b/kernels/cuda/rotary_embedding.py
+@@ -23,6 +23,7 @@ CUDA_SRC = r"""
+ #include <cuda_runtime.h>
+ #include <cuda_fp16.h>
+ #include <math.h>
++#include <algorithm>
+ 
+ constexpr int BLOCK_SIZE = 256;
+ constexpr float BASE_FREQ = 10000.0f;
+@@ -111,7 +112,7 @@ torch::Tensor rotary_embedding_cuda(torch::Tensor x, torch::Tensor cos_cache, to
+ 
+     int total = B * H * N * (D / 2);
+     int blocks = (total + BLOCK_SIZE - 1) / BLOCK_SIZE;
+-    blocks = min(blocks, 65535);
++    blocks = std::min(blocks, 65535);
+ 
+     rotary_embedding_kernel<<<blocks, BLOCK_SIZE>>>(
+         reinterpret_cast<const half*>(x.data_ptr<at::Half>()),
+@@ -131,7 +132,7 @@ std::vector<torch::Tensor> precompute_freqs_cuda(int N, int D, torch::Device dev
+ 
+     int total = N * (D / 2);
+     int blocks = (total + BLOCK_SIZE - 1) / BLOCK_SIZE;
+-    blocks = min(blocks, 65535);
++    blocks = std::min(blocks, 65535);
+ 
+     precompute_freqs_kernel<<<blocks, BLOCK_SIZE>>>(
+         reinterpret_cast<half*>(cos_cache.data_ptr<at::Half>()),
+diff --git a/kernels/cuda/softmax.py b/kernels/cuda/softmax.py
+index 6426a44..1165a65 100644
+--- a/kernels/cuda/softmax.py
++++ b/kernels/cuda/softmax.py
+@@ -30,6 +30,7 @@ CUDA_SRC = r"""
+ #include <cuda_runtime.h>
+ #include <cuda_fp16.h>
+ #include <cfloat>
++#include <algorithm>
+ 
+ // =========================================================================
+ // Warp-level reduction helpers
+@@ -124,6 +125,68 @@ softmax_kernel_fp16(
+         const half* row_in  = input  + (long long)row * n_cols;
+         half*       row_out = output + (long long)row * n_cols;
+ 
++#if defined(AUTOKERNEL_COREX)
++        // CoreX (ivcore11) note: when n_cols is odd, odd-numbered rows begin at
++        // a 2-byte (half) offset, so a half2 (32-bit) view of the row is NOT
++        // 4-byte aligned.  ivcore11 silently returns wrong values for
++        // misaligned 32-bit loads (compat index: non-4-align uint32/half2 read
++        // -> silent-wrong), which yields NaN.  Use a scalar path for odd
++        // n_cols; keep the vectorized half2 path for the aligned (even) case.
++        // This whole branch is compiled only on CoreX; the NVIDIA path in the
++        // #else below is the original vectorized+tail implementation, unchanged.
++        if (n_tail == 0) {
++            const half2* row_in_v  = reinterpret_cast<const half2*>(row_in);
++            half2*       row_out_v = reinterpret_cast<half2*>(row_out);
++
++            // ---- Pass 1: find row max ----
++            float thread_max = -FLT_MAX;
++            for (int i = lane; i < n_pairs; i += 32) {
++                half2 v = row_in_v[i];
++                thread_max = fmaxf(thread_max, fmaxf(__half2float(v.x), __half2float(v.y)));
++            }
++            float row_max = warp_reduce_max(thread_max);
++
++            // ---- Pass 2: exp(x - max) and accumulate sum ----
++            float thread_sum = 0.0f;
++            for (int i = lane; i < n_pairs; i += 32) {
++                half2 v = row_in_v[i];
++                float lo = __expf(__half2float(v.x) - row_max);
++                float hi = __expf(__half2float(v.y) - row_max);
++                row_out_v[i] = __halves2half2(__float2half(lo), __float2half(hi));
++                thread_sum += lo + hi;
++            }
++            float row_sum = warp_reduce_sum(thread_sum);
++
++            // ---- Pass 3: divide by sum ----
++            float inv_sum = __fdividef(1.0f, row_sum);
++            for (int i = lane; i < n_pairs; i += 32) {
++                half2 v = row_out_v[i];
++                float lo = __half2float(v.x) * inv_sum;
++                float hi = __half2float(v.y) * inv_sum;
++                row_out_v[i] = __halves2half2(__float2half(lo), __float2half(hi));
++            }
++        } else {
++            // Scalar path (avoids misaligned half2 on odd n_cols).
++            float thread_max = -FLT_MAX;
++            for (int c = lane; c < n_cols; c += 32) {
++                thread_max = fmaxf(thread_max, __half2float(row_in[c]));
++            }
++            float row_max = warp_reduce_max(thread_max);
++
++            float thread_sum = 0.0f;
++            for (int c = lane; c < n_cols; c += 32) {
++                float v = __expf(__half2float(row_in[c]) - row_max);
++                row_out[c] = __float2half(v);
++                thread_sum += v;
++            }
++            float row_sum = warp_reduce_sum(thread_sum);
++
++            float inv_sum = __fdividef(1.0f, row_sum);
++            for (int c = lane; c < n_cols; c += 32) {
++                row_out[c] = __float2half(__half2float(row_out[c]) * inv_sum);
++            }
++        }
++#else
+         // Reinterpret as half2 for vectorized access
+         const half2* row_in_v  = reinterpret_cast<const half2*>(row_in);
+         half2*       row_out_v = reinterpret_cast<half2*>(row_out);
+@@ -177,6 +240,7 @@ softmax_kernel_fp16(
+             float val = __half2float(row_out[n_cols - 1]) * inv_sum;
+             row_out[n_cols - 1] = __float2half(val);
+         }
++#endif  // AUTOKERNEL_COREX
+     }
+ }
+ 
+@@ -201,7 +265,7 @@ torch::Tensor softmax_cuda(torch::Tensor input) {
+     const int total_warps_needed = n_rows;
+     const int blocks = (total_warps_needed + WARPS_PER_BLOCK - 1) / WARPS_PER_BLOCK;
+     // Cap to reasonable grid size; grid-stride handles the rest
+-    const int grid = min(blocks, 65535);
++    const int grid = std::min(blocks, 65535);
+ 
+     if (input.dtype() == torch::kFloat16) {
+         softmax_kernel_fp16<<<grid, THREADS_PER_BLOCK>>>(
+diff --git a/kernels/fused_mlp.py b/kernels/fused_mlp.py
+index 3c91ced..1a81e14 100644
+--- a/kernels/fused_mlp.py
++++ b/kernels/fused_mlp.py
+@@ -21,6 +21,14 @@ import torch
+ import triton
+ import triton.language as tl
+ 
++# Some Triton builds (e.g. CoreX / ivcore11 Triton 3.2) do not expose
++# ``tl.math.tanh``.  Detect it once at import time and select the native
++# intrinsic when available; otherwise fall back to the mathematically
++# equivalent identity tanh(z) = 2*sigmoid(2z) - 1.  This is a compile-time
++# constant, so the upstream ``tl.math.tanh`` path is preserved unchanged on
++# NVIDIA where the intrinsic exists.
++_HAS_TL_TANH = hasattr(tl, "math") and hasattr(tl.math, "tanh")
++
+ 
+ @triton.jit
+ def fused_gate_up_kernel(
+@@ -89,7 +97,13 @@ def fused_gate_up_kernel(
+         gate_activated = acc_gate * tl.sigmoid(acc_gate)
+     else:
+         # GELU approximation
+-        gate_activated = 0.5 * acc_gate * (1.0 + tl.math.tanh(0.7978845608 * (acc_gate + 0.044715 * acc_gate * acc_gate * acc_gate)))
++        _gelu_z = 0.7978845608 * (acc_gate + 0.044715 * acc_gate * acc_gate * acc_gate)
++        if _HAS_TL_TANH:
++            _gelu_tanh = tl.math.tanh(_gelu_z)
++        else:
++            # CoreX triton (3.2) has no tl.math.tanh; use tanh(z)=2*sigmoid(2z)-1.
++            _gelu_tanh = 2.0 * tl.sigmoid(2.0 * _gelu_z) - 1.0
++        gate_activated = 0.5 * acc_gate * (1.0 + _gelu_tanh)
+ 
+     result = gate_activated * acc_up
+ 

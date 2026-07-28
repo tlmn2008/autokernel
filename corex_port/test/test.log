@@ -1,0 +1,2779 @@
+
+===== AutoKernel CoreX 测试运行 @ 2026-07-28 15:57:58 =====
+
+##############################################################################
+# CONFIG: kernel=matmul backend=triton
+# source=/home/repos/autokernel/kernels/matmul.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: matmul
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 2.048
+gpu_peak_tflops_bf16: 2.048
+gpu_peak_tflops_fp32: 1.024
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  PASS (max_abs_error=0.000000e+00)
+
+--- Stage 2: Shape Sweep ---
+  PASS: tiny torch.float16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: tiny torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: tiny torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: small torch.float16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: small torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: small torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: medium torch.float16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: medium torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: medium torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: large torch.float16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: large torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: large torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: xlarge torch.float16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: xlarge torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: xlarge torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: tall torch.float16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: tall torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: tall torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: wide torch.float16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: wide torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: wide torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: deep_k torch.float16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: deep_k torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: deep_k torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: llm_qkv torch.float16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: llm_qkv torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: llm_qkv torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: llm_mlp torch.float16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: llm_mlp torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: llm_mlp torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  shape_sweep: PASS (30 configs, worst_err=0.00e+00)
+
+--- Stage 3: Numerical Stability ---
+  PASS: near_max -> both have NaN/Inf (expected overflow)
+  PASS: near_zero (max_err=0.00e+00)
+  PASS: mixed_scale -> both have NaN/Inf (expected overflow)
+  PASS: all_zeros (max_err=0.00e+00)
+  PASS: all_same (max_err=0.00e+00)
+  numerical_stability: PASS
+
+--- Stage 4: Determinism ---
+  PASS: 3 runs are bitwise identical
+
+--- Stage 5: Edge Cases ---
+  PASS: edge_1023 (max_err=6.25e-02)
+  PASS: edge_4097 (max_err=0.00e+00)
+  PASS: edge_1537 (max_err=1.25e-01)
+  edge_cases: PASS
+
+correctness: PASS
+
+--- Correctness Summary ---
+smoke_test: PASS
+shape_sweep: PASS (30 configs, worst_err=0.00e+00 at )
+numerical_stability: PASS
+determinism: PASS
+edge_cases: PASS
+correctness: PASS
+
+=== PERFORMANCE (large: M=2048, N=2048, K=2048, dtype=torch.float16) ===
+
+  Benchmarking: tiny ...
+    kernel: 14.31 us | pytorch: 7.49 us | speedup: 0.524x | 0.293 TFLOPS | 14.3% peak
+
+  Benchmarking: small ...
+    kernel: 24.25 us | pytorch: 15.97 us | speedup: 0.659x | 11.069 TFLOPS | 540.5% peak
+
+  Benchmarking: medium ...
+    kernel: 134.64 us | pytorch: 38.24 us | speedup: 0.284x | 15.950 TFLOPS | 778.8% peak
+
+  Benchmarking: large ...
+    kernel: 812.40 us | pytorch: 182.79 us | speedup: 0.225x | 21.147 TFLOPS | 1032.6% peak
+
+  Benchmarking: xlarge ...
+    kernel: 7316.88 us | pytorch: 1563.00 us | speedup: 0.214x | 18.784 TFLOPS | 917.2% peak
+
+  Benchmarking: tall ...
+    kernel: 1097.74 us | pytorch: 220.12 us | speedup: 0.201x | 15.650 TFLOPS | 764.2% peak
+
+  Benchmarking: wide ...
+    kernel: 951.25 us | pytorch: 222.17 us | speedup: 0.234x | 18.060 TFLOPS | 881.9% peak
+
+  Benchmarking: deep_k ...
+    kernel: 1006.49 us | pytorch: 228.69 us | speedup: 0.227x | 17.069 TFLOPS | 833.5% peak
+
+  Benchmarking: llm_qkv ...
+    kernel: 1037.27 us | pytorch: 223.72 us | speedup: 0.216x | 16.563 TFLOPS | 808.7% peak
+
+  Benchmarking: llm_mlp ...
+    kernel: 20320.48 us | pytorch: 4494.92 us | speedup: 0.221x | 18.177 TFLOPS | 887.6% peak
+
+--- Performance Summary (primary: large) ---
+latency_us: 812.40
+latency_ms: 0.8124
+throughput_tflops: 21.147
+bandwidth_gb_s: 31.0
+pct_peak_compute: 1032.6%
+pct_peak_bandwidth: 6.2%
+arithmetic_intensity: 682.67
+ridge_point: 4.10
+bottleneck: compute_bound
+flops: 17179869184
+bytes: 25165824
+peak_vram_mb: 460.0
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 182.79
+pytorch_latency_ms: 0.1828
+kernel_latency_us: 812.40
+kernel_latency_ms: 0.8124
+speedup_vs_pytorch: 0.225x
+pytorch_tflops: 93.988
+kernel_tflops: 21.147
+
+=== SIZE SWEEP ===
+size            kernel_us   pytorch_us    speedup     tflops    %peak
+------------------------------------------------------------------
+tiny                14.31         7.49     0.524x      0.293    14.3%
+small               24.25        15.97     0.659x     11.069   540.5%
+medium             134.64        38.24     0.284x     15.950   778.8%
+large              812.40       182.79     0.225x     21.147  1032.6%
+xlarge            7316.88      1563.00     0.214x     18.784   917.2%
+tall              1097.74       220.12     0.201x     15.650   764.2%
+wide               951.25       222.17     0.234x     18.060   881.9%
+deep_k            1006.49       228.69     0.227x     17.069   833.5%
+llm_qkv           1037.27       223.72     0.216x     16.563   808.7%
+llm_mlp          20320.48      4494.92     0.221x     18.177   887.6%
+
+=== FINAL ===
+kernel_type: matmul
+correctness: PASS
+throughput_tflops: 21.147
+speedup_vs_pytorch: 0.225x
+pct_peak_compute: 1032.6%
+bench_time_seconds: 4.3
+
+[exit=0 elapsed=11.5s]
+
+##############################################################################
+# CONFIG: kernel=matmul backend=cuda
+# source=/home/repos/autokernel/kernels/cuda/matmul.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: matmul
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 6.144
+gpu_peak_tflops_bf16: 6.144
+gpu_peak_tflops_fp32: 3.072
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  PASS (max_abs_error=1.562500e-02)
+
+--- Stage 2: Shape Sweep ---
+  PASS: tiny torch.float16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: tiny torch.bfloat16 (max_err=2.50e-01, within_tol=100.0%)
+  FAIL: tiny torch.float32 -> max_abs_error=2.276611e-02 exceeds tol(atol=0.0001, rtol=0.0001)
+  PASS: small torch.float16 (max_err=3.12e-02, within_tol=100.0%)
+  PASS: small torch.bfloat16 (max_err=5.00e-01, within_tol=100.0%)
+  FAIL: small torch.float32 -> max_abs_error=4.895020e-02 exceeds tol(atol=0.0001, rtol=0.0001)
+  PASS: medium torch.float16 (max_err=6.25e-02, within_tol=100.0%)
+  PASS: medium torch.bfloat16 (max_err=1.00e+00, within_tol=100.0%)
+  FAIL: medium torch.float32 -> max_abs_error=8.462524e-02 exceeds tol(atol=0.0001, rtol=0.0001)
+  PASS: large torch.float16 (max_err=1.25e-01, within_tol=100.0%)
+  PASS: large torch.bfloat16 (max_err=1.00e+00, within_tol=100.0%)
+  FAIL: large torch.float32 -> max_abs_error=1.090393e-01 exceeds tol(atol=0.0001, rtol=0.0001)
+  PASS: xlarge torch.float16 (max_err=2.50e-01, within_tol=100.0%)
+  PASS: xlarge torch.bfloat16 (max_err=2.00e+00, within_tol=100.0%)
+  FAIL: xlarge torch.float32 -> max_abs_error=1.647949e-01 exceeds tol(atol=0.0001, rtol=0.0001)
+  PASS: tall torch.float16 (max_err=6.25e-02, within_tol=100.0%)
+  PASS: tall torch.bfloat16 (max_err=1.00e+00, within_tol=100.0%)
+  FAIL: tall torch.float32 -> max_abs_error=9.123230e-02 exceeds tol(atol=0.0001, rtol=0.0001)
+  PASS: wide torch.float16 (max_err=1.25e-01, within_tol=100.0%)
+  PASS: wide torch.bfloat16 (max_err=1.00e+00, within_tol=100.0%)
+  FAIL: wide torch.float32 -> max_abs_error=8.148193e-02 exceeds tol(atol=0.0001, rtol=0.0001)
+  PASS: deep_k torch.float16 (max_err=2.50e-01, within_tol=100.0%)
+  PASS: deep_k torch.bfloat16 (max_err=2.00e+00, within_tol=100.0%)
+  FAIL: deep_k torch.float32 -> max_abs_error=2.080688e-01 exceeds tol(atol=0.0001, rtol=0.0001)
+  PASS: llm_qkv torch.float16 (max_err=6.25e-02, within_tol=100.0%)
+  PASS: llm_qkv torch.bfloat16 (max_err=5.00e-01, within_tol=100.0%)
+  FAIL: llm_qkv torch.float32 -> max_abs_error=5.838013e-02 exceeds tol(atol=0.0001, rtol=0.0001)
+  PASS: llm_mlp torch.float16 (max_err=2.50e-01, within_tol=100.0%)
+  PASS: llm_mlp torch.bfloat16 (max_err=2.00e+00, within_tol=100.0%)
+  FAIL: llm_mlp torch.float32 -> max_abs_error=1.679077e-01 exceeds tol(atol=0.0001, rtol=0.0001)
+  shape_sweep: FAIL (10/30 failed)
+
+--- Stage 3: Numerical Stability ---
+  PASS: near_max -> both have NaN/Inf (expected overflow)
+  PASS: near_zero (max_err=0.00e+00)
+  PASS: mixed_scale -> both have NaN/Inf (expected overflow)
+  PASS: all_zeros (max_err=0.00e+00)
+  PASS: all_same (max_err=0.00e+00)
+  numerical_stability: PASS
+
+--- Stage 4: Determinism ---
+  PASS: 3 runs are bitwise identical
+
+--- Stage 5: Edge Cases ---
+  PASS: edge_1023 (max_err=6.25e-02)
+  PASS: edge_4097 (max_err=6.25e-02)
+  PASS: edge_1537 (max_err=1.25e-01)
+  edge_cases: PASS
+
+correctness: FAIL
+
+--- Correctness Summary ---
+smoke_test: PASS
+shape_sweep: FAIL (10/30 failed)
+numerical_stability: PASS
+determinism: PASS
+edge_cases: PASS
+correctness: FAIL
+
+=== PERFORMANCE (large: M=2048, N=2048, K=2048, dtype=torch.float16) ===
+
+  Benchmarking: tiny ...
+    kernel: 18.05 us | pytorch: 7.69 us | speedup: 0.426x | 0.232 TFLOPS | 3.8% peak
+
+  Benchmarking: small ...
+    kernel: 392.91 us | pytorch: 16.86 us | speedup: 0.043x | 0.683 TFLOPS | 11.1% peak
+
+  Benchmarking: medium ...
+    kernel: 3092.58 us | pytorch: 38.55 us | speedup: 0.012x | 0.694 TFLOPS | 11.3% peak
+
+  Benchmarking: large ...
+    kernel: 24560.74 us | pytorch: 183.72 us | speedup: 0.007x | 0.699 TFLOPS | 11.4% peak
+
+  Benchmarking: xlarge ...
+    kernel: 195872.12 us | pytorch: 1554.61 us | speedup: 0.008x | 0.702 TFLOPS | 11.4% peak
+
+  Benchmarking: tall ...
+    kernel: 26591.12 us | pytorch: 205.52 us | speedup: 0.008x | 0.646 TFLOPS | 10.5% peak
+
+  Benchmarking: wide ...
+    kernel: 24427.97 us | pytorch: 231.84 us | speedup: 0.009x | 0.703 TFLOPS | 11.4% peak
+
+  Benchmarking: deep_k ...
+    kernel: 25147.64 us | pytorch: 231.45 us | speedup: 0.009x | 0.683 TFLOPS | 11.1% peak
+
+  Benchmarking: llm_qkv ...
+    kernel: 25152.73 us | pytorch: 217.55 us | speedup: 0.009x | 0.683 TFLOPS | 11.1% peak
+
+  Benchmarking: llm_mlp ...
+    kernel: 525920.35 us | pytorch: 4494.56 us | speedup: 0.009x | 0.702 TFLOPS | 11.4% peak
+
+--- Performance Summary (primary: large) ---
+latency_us: 24560.74
+latency_ms: 24.5607
+throughput_tflops: 0.699
+bandwidth_gb_s: 1.0
+pct_peak_compute: 11.4%
+pct_peak_bandwidth: 0.2%
+arithmetic_intensity: 682.67
+ridge_point: 12.29
+bottleneck: compute_bound
+flops: 17179869184
+bytes: 25165824
+peak_vram_mb: 460.0
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 183.72
+pytorch_latency_ms: 0.1837
+kernel_latency_us: 24560.74
+kernel_latency_ms: 24.5607
+speedup_vs_pytorch: 0.007x
+pytorch_tflops: 93.511
+kernel_tflops: 0.699
+
+=== SIZE SWEEP ===
+size            kernel_us   pytorch_us    speedup     tflops    %peak
+------------------------------------------------------------------
+tiny                18.05         7.69     0.426x      0.232     3.8%
+small              392.91        16.86     0.043x      0.683    11.1%
+medium            3092.58        38.55     0.012x      0.694    11.3%
+large            24560.74       183.72     0.007x      0.699    11.4%
+xlarge          195872.12      1554.61     0.008x      0.702    11.4%
+tall             26591.12       205.52     0.008x      0.646    10.5%
+wide             24427.97       231.84     0.009x      0.703    11.4%
+deep_k           25147.64       231.45     0.009x      0.683    11.1%
+llm_qkv          25152.73       217.55     0.009x      0.683    11.1%
+llm_mlp         525920.35      4494.56     0.009x      0.702    11.4%
+
+=== FINAL ===
+kernel_type: matmul
+correctness: FAIL
+throughput_tflops: 0.699
+speedup_vs_pytorch: 0.007x
+pct_peak_compute: 11.4%
+bench_time_seconds: 12.3
+
+[exit=0 elapsed=18.3s]
+
+##############################################################################
+# CONFIG: kernel=softmax backend=triton
+# source=/home/repos/autokernel/kernels/softmax.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: softmax
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 6.144
+gpu_peak_tflops_bf16: 6.144
+gpu_peak_tflops_fp32: 3.072
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  PASS (max_abs_error=7.629395e-06)
+
+--- Stage 2: Shape Sweep ---
+  PASS: tiny torch.float16 (max_err=7.63e-06, within_tol=100.0%)
+  PASS: tiny torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: tiny torch.float32 (max_err=2.24e-08, within_tol=100.0%)
+  PASS: small torch.float16 (max_err=3.81e-06, within_tol=100.0%)
+  PASS: small torch.bfloat16 (max_err=3.81e-06, within_tol=100.0%)
+  PASS: small torch.float32 (max_err=1.49e-08, within_tol=100.0%)
+  PASS: medium torch.float16 (max_err=1.53e-05, within_tol=100.0%)
+  PASS: medium torch.bfloat16 (max_err=3.05e-05, within_tol=100.0%)
+  PASS: medium torch.float32 (max_err=7.45e-09, within_tol=100.0%)
+  PASS: large torch.float16 (max_err=1.91e-06, within_tol=100.0%)
+  PASS: large torch.bfloat16 (max_err=7.63e-06, within_tol=100.0%)
+  PASS: large torch.float32 (max_err=3.73e-09, within_tol=100.0%)
+  PASS: xlarge torch.float16 (max_err=1.91e-06, within_tol=100.0%)
+  PASS: xlarge torch.bfloat16 (max_err=7.63e-06, within_tol=100.0%)
+  PASS: xlarge torch.float32 (max_err=3.73e-09, within_tol=100.0%)
+  PASS: wide torch.float16 (max_err=4.77e-07, within_tol=100.0%)
+  PASS: wide torch.bfloat16 (max_err=3.81e-06, within_tol=100.0%)
+  PASS: wide torch.float32 (max_err=4.66e-10, within_tol=100.0%)
+  PASS: narrow torch.float16 (max_err=6.10e-05, within_tol=100.0%)
+  PASS: narrow torch.bfloat16 (max_err=2.44e-04, within_tol=100.0%)
+  PASS: narrow torch.float32 (max_err=8.94e-08, within_tol=100.0%)
+  PASS: vocab torch.float16 (max_err=4.77e-07, within_tol=100.0%)
+  PASS: vocab torch.bfloat16 (max_err=1.91e-06, within_tol=100.0%)
+  PASS: vocab torch.float32 (max_err=6.98e-10, within_tol=100.0%)
+  shape_sweep: PASS (24 configs, worst_err=2.44e-04)
+
+--- Stage 3: Numerical Stability ---
+  PASS: near_max -> both have NaN/Inf (expected overflow)
+  PASS: near_zero (max_err=0.00e+00)
+  PASS: mixed_scale (max_err=0.00e+00)
+  PASS: all_zeros (max_err=0.00e+00)
+  PASS: all_same (max_err=0.00e+00)
+  numerical_stability: PASS
+
+--- Stage 4: Determinism ---
+  PASS: 3 runs are bitwise identical
+
+--- Stage 5: Edge Cases ---
+  PASS: edge_1023 (max_err=3.81e-06)
+  PASS: edge_4097 (max_err=1.91e-06)
+  PASS: edge_50257 (max_err=4.77e-07)
+  edge_cases: PASS
+
+correctness: PASS
+
+--- Correctness Summary ---
+smoke_test: PASS
+shape_sweep: PASS (24 configs, worst_err=2.44e-04 at narrow/torch.bfloat16)
+numerical_stability: PASS
+determinism: PASS
+edge_cases: PASS
+correctness: PASS
+
+=== PERFORMANCE (large: rows=4096, cols=4096, dtype=torch.float16) ===
+
+  Benchmarking: tiny ...
+    kernel: 6.22 us | pytorch: 6.21 us | speedup: 0.998x | 0.003 TFLOPS | 0.1% peak
+
+  Benchmarking: small ...
+    kernel: 7.23 us | pytorch: 10.45 us | speedup: 1.445x | 0.091 TFLOPS | 1.5% peak
+
+  Benchmarking: medium ...
+    kernel: 15.68 us | pytorch: 21.08 us | speedup: 1.344x | 0.334 TFLOPS | 5.4% peak
+
+  Benchmarking: large ...
+    kernel: 132.80 us | pytorch: 219.60 us | speedup: 1.654x | 0.632 TFLOPS | 10.3% peak
+
+  Benchmarking: xlarge ...
+    kernel: 479.76 us | pytorch: 748.02 us | speedup: 1.559x | 0.699 TFLOPS | 11.4% peak
+
+  Benchmarking: wide ...
+    kernel: 260.00 us | pytorch: 1141.32 us | speedup: 4.390x | 0.645 TFLOPS | 10.5% peak
+
+  Benchmarking: narrow ...
+    kernel: 145.56 us | pytorch: 106.38 us | speedup: 0.731x | 0.144 TFLOPS | 2.3% peak
+
+  Benchmarking: vocab ...
+    kernel: 7385.44 us | pytorch: 2453.46 us | speedup: 0.332x | 0.139 TFLOPS | 2.3% peak
+
+--- Performance Summary (primary: large) ---
+latency_us: 132.80
+latency_ms: 0.1328
+throughput_tflops: 0.632
+bandwidth_gb_s: 505.3
+pct_peak_compute: 10.3%
+pct_peak_bandwidth: 101.1%
+arithmetic_intensity: 1.25
+ridge_point: 12.29
+bottleneck: memory_bound
+flops: 83886080
+bytes: 67108864
+peak_vram_mb: 1041.3
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 219.60
+pytorch_latency_ms: 0.2196
+kernel_latency_us: 132.80
+kernel_latency_ms: 0.1328
+speedup_vs_pytorch: 1.654x
+pytorch_tflops: 0.382
+kernel_tflops: 0.632
+
+=== SIZE SWEEP ===
+size            kernel_us   pytorch_us    speedup     tflops    %peak
+------------------------------------------------------------------
+tiny                 6.22         6.21     0.998x      0.003     0.1%
+small                7.23        10.45     1.445x      0.091     1.5%
+medium              15.68        21.08     1.344x      0.334     5.4%
+large              132.80       219.60     1.654x      0.632    10.3%
+xlarge             479.76       748.02     1.559x      0.699    11.4%
+wide               260.00      1141.32     4.390x      0.645    10.5%
+narrow             145.56       106.38     0.731x      0.144     2.3%
+vocab             7385.44      2453.46     0.332x      0.139     2.3%
+
+=== FINAL ===
+kernel_type: softmax
+correctness: PASS
+throughput_tflops: 0.632
+speedup_vs_pytorch: 1.654x
+pct_peak_compute: 10.3%
+bench_time_seconds: 3.7
+
+[exit=0 elapsed=9.7s]
+
+##############################################################################
+# CONFIG: kernel=softmax backend=cuda
+# source=/home/repos/autokernel/kernels/cuda/softmax.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: softmax
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 6.144
+gpu_peak_tflops_bf16: 6.144
+gpu_peak_tflops_fp32: 3.072
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  PASS (max_abs_error=3.051758e-05)
+
+--- Stage 2: Shape Sweep ---
+  PASS: tiny torch.float16 (max_err=3.05e-05, within_tol=100.0%)
+  PASS: tiny torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: tiny torch.float32 (max_err=2.98e-08, within_tol=100.0%)
+  PASS: small torch.float16 (max_err=3.05e-05, within_tol=100.0%)
+  PASS: small torch.bfloat16 (max_err=3.81e-06, within_tol=100.0%)
+  PASS: small torch.float32 (max_err=1.12e-08, within_tol=100.0%)
+  PASS: medium torch.float16 (max_err=1.53e-05, within_tol=100.0%)
+  PASS: medium torch.bfloat16 (max_err=1.53e-05, within_tol=100.0%)
+  PASS: medium torch.float32 (max_err=7.45e-09, within_tol=100.0%)
+  PASS: large torch.float16 (max_err=7.63e-06, within_tol=100.0%)
+  PASS: large torch.bfloat16 (max_err=7.63e-06, within_tol=100.0%)
+  PASS: large torch.float32 (max_err=5.59e-09, within_tol=100.0%)
+  PASS: xlarge torch.float16 (max_err=7.63e-06, within_tol=100.0%)
+  PASS: xlarge torch.bfloat16 (max_err=7.63e-06, within_tol=100.0%)
+  PASS: xlarge torch.float32 (max_err=3.73e-09, within_tol=100.0%)
+  PASS: wide torch.float16 (max_err=9.54e-07, within_tol=100.0%)
+  PASS: wide torch.bfloat16 (max_err=9.54e-07, within_tol=100.0%)
+  PASS: wide torch.float32 (max_err=9.31e-10, within_tol=100.0%)
+  PASS: narrow torch.float16 (max_err=6.10e-05, within_tol=100.0%)
+  PASS: narrow torch.bfloat16 (max_err=2.44e-04, within_tol=100.0%)
+  PASS: narrow torch.float32 (max_err=5.96e-08, within_tol=100.0%)
+  PASS: vocab torch.float16 (max_err=9.54e-07, within_tol=100.0%)
+  PASS: vocab torch.bfloat16 (max_err=1.91e-06, within_tol=100.0%)
+  PASS: vocab torch.float32 (max_err=9.31e-10, within_tol=100.0%)
+  shape_sweep: PASS (24 configs, worst_err=2.44e-04)
+
+--- Stage 3: Numerical Stability ---
+  PASS: near_max -> both have NaN/Inf (expected overflow)
+  PASS: near_zero (max_err=0.00e+00)
+  PASS: mixed_scale (max_err=6.10e-05)
+  PASS: all_zeros (max_err=0.00e+00)
+  PASS: all_same (max_err=0.00e+00)
+  numerical_stability: PASS
+
+--- Stage 4: Determinism ---
+  PASS: 3 runs are bitwise identical
+
+--- Stage 5: Edge Cases ---
+  PASS: edge_1023 (max_err=1.53e-05)
+  PASS: edge_4097 (max_err=7.63e-06)
+  PASS: edge_50257 (max_err=9.54e-07)
+  edge_cases: PASS
+
+correctness: PASS
+
+--- Correctness Summary ---
+smoke_test: PASS
+shape_sweep: PASS (24 configs, worst_err=2.44e-04 at narrow/torch.bfloat16)
+numerical_stability: PASS
+determinism: PASS
+edge_cases: PASS
+correctness: PASS
+
+=== PERFORMANCE (large: rows=4096, cols=4096, dtype=torch.float16) ===
+
+  Benchmarking: tiny ...
+    kernel: 5.21 us | pytorch: 6.26 us | speedup: 1.202x | 0.004 TFLOPS | 0.1% peak
+
+  Benchmarking: small ...
+    kernel: 10.40 us | pytorch: 10.45 us | speedup: 1.005x | 0.063 TFLOPS | 1.0% peak
+
+  Benchmarking: medium ...
+    kernel: 21.28 us | pytorch: 21.11 us | speedup: 0.992x | 0.246 TFLOPS | 4.0% peak
+
+  Benchmarking: large ...
+    kernel: 304.54 us | pytorch: 219.66 us | speedup: 0.721x | 0.275 TFLOPS | 4.5% peak
+
+  Benchmarking: xlarge ...
+    kernel: 1172.47 us | pytorch: 748.06 us | speedup: 0.638x | 0.286 TFLOPS | 4.7% peak
+
+  Benchmarking: wide ...
+    kernel: 645.91 us | pytorch: 1141.77 us | speedup: 1.768x | 0.260 TFLOPS | 4.2% peak
+
+  Benchmarking: narrow ...
+    kernel: 47.29 us | pytorch: 106.38 us | speedup: 2.249x | 0.443 TFLOPS | 7.2% peak
+
+  Benchmarking: vocab ...
+    kernel: 6619.30 us | pytorch: 2454.43 us | speedup: 0.371x | 0.155 TFLOPS | 2.5% peak
+
+--- Performance Summary (primary: large) ---
+latency_us: 304.54
+latency_ms: 0.3045
+throughput_tflops: 0.275
+bandwidth_gb_s: 220.4
+pct_peak_compute: 4.5%
+pct_peak_bandwidth: 44.1%
+arithmetic_intensity: 1.25
+ridge_point: 12.29
+bottleneck: memory_bound
+flops: 83886080
+bytes: 67108864
+peak_vram_mb: 1041.3
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 219.66
+pytorch_latency_ms: 0.2197
+kernel_latency_us: 304.54
+kernel_latency_ms: 0.3045
+speedup_vs_pytorch: 0.721x
+pytorch_tflops: 0.382
+kernel_tflops: 0.275
+
+=== SIZE SWEEP ===
+size            kernel_us   pytorch_us    speedup     tflops    %peak
+------------------------------------------------------------------
+tiny                 5.21         6.26     1.202x      0.004     0.1%
+small               10.40        10.45     1.005x      0.063     1.0%
+medium              21.28        21.11     0.992x      0.246     4.0%
+large              304.54       219.66     0.721x      0.275     4.5%
+xlarge            1172.47       748.06     0.638x      0.286     4.7%
+wide               645.91      1141.77     1.768x      0.260     4.2%
+narrow              47.29       106.38     2.249x      0.443     7.2%
+vocab             6619.30      2454.43     0.371x      0.155     2.5%
+
+=== FINAL ===
+kernel_type: softmax
+correctness: PASS
+throughput_tflops: 0.275
+speedup_vs_pytorch: 0.721x
+pct_peak_compute: 4.5%
+bench_time_seconds: 3.2
+
+[exit=0 elapsed=9.5s]
+
+##############################################################################
+# CONFIG: kernel=layernorm backend=triton
+# source=/home/repos/autokernel/kernels/layernorm.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: layernorm
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 6.144
+gpu_peak_tflops_bf16: 6.144
+gpu_peak_tflops_fp32: 3.072
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  PASS (max_abs_error=0.000000e+00)
+
+--- Stage 2: Shape Sweep ---
+  PASS: tiny torch.float16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: tiny torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: tiny torch.float32 (max_err=4.77e-07, within_tol=100.0%)
+  PASS: small torch.float16 (max_err=9.77e-04, within_tol=100.0%)
+  FAIL: small torch.bfloat16 -> max_abs_error=7.812500e-03 exceeds tol(atol=0.002, rtol=0.002)
+  PASS: small torch.float32 (max_err=7.15e-07, within_tol=100.0%)
+  PASS: medium torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  FAIL: medium torch.bfloat16 -> max_abs_error=1.562500e-02 exceeds tol(atol=0.002, rtol=0.002)
+  PASS: medium torch.float32 (max_err=7.15e-07, within_tol=100.0%)
+  PASS: large torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  FAIL: large torch.bfloat16 -> max_abs_error=7.812500e-03 exceeds tol(atol=0.002, rtol=0.002)
+  PASS: large torch.float32 (max_err=1.19e-06, within_tol=100.0%)
+  PASS: xlarge torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  FAIL: xlarge torch.bfloat16 -> max_abs_error=1.562500e-02 exceeds tol(atol=0.002, rtol=0.002)
+  PASS: xlarge torch.float32 (max_err=9.54e-07, within_tol=100.0%)
+  PASS: wide torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  FAIL: wide torch.bfloat16 -> max_abs_error=1.562500e-02 exceeds tol(atol=0.002, rtol=0.002)
+  PASS: wide torch.float32 (max_err=9.54e-07, within_tol=100.0%)
+  PASS: llm_7b torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  FAIL: llm_7b torch.bfloat16 -> max_abs_error=1.562500e-02 exceeds tol(atol=0.002, rtol=0.002)
+  PASS: llm_7b torch.float32 (max_err=9.54e-07, within_tol=100.0%)
+  PASS: llm_13b torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  FAIL: llm_13b torch.bfloat16 -> max_abs_error=1.562500e-02 exceeds tol(atol=0.002, rtol=0.002)
+  PASS: llm_13b torch.float32 (max_err=9.54e-07, within_tol=100.0%)
+  shape_sweep: FAIL (7/24 failed)
+
+--- Stage 3: Numerical Stability ---
+  PASS: near_max -> both have NaN/Inf (expected overflow)
+  PASS: near_zero (max_err=0.00e+00)
+  PASS: mixed_scale (max_err=1.00e+00)
+  PASS: all_zeros (max_err=0.00e+00)
+  PASS: all_same (max_err=0.00e+00)
+  numerical_stability: PASS
+
+--- Stage 4: Determinism ---
+  PASS: 3 runs are bitwise identical
+
+--- Stage 5: Edge Cases ---
+  PASS: edge_1023 (max_err=9.77e-04)
+  PASS: edge_4097 (max_err=1.95e-03)
+  edge_cases: PASS
+
+correctness: FAIL
+
+--- Correctness Summary ---
+smoke_test: PASS
+shape_sweep: FAIL (7/24 failed)
+numerical_stability: PASS
+determinism: PASS
+edge_cases: PASS
+correctness: FAIL
+
+=== PERFORMANCE (large: batch=4096, dim=2048, dtype=torch.float16) ===
+
+  Benchmarking: tiny ...
+    kernel: 6.43 us | pytorch: 8.14 us | speedup: 1.266x | 0.005 TFLOPS | 0.1% peak
+
+  Benchmarking: small ...
+    kernel: 7.80 us | pytorch: 10.53 us | speedup: 1.349x | 0.134 TFLOPS | 2.2% peak
+
+  Benchmarking: medium ...
+    kernel: 16.94 us | pytorch: 23.08 us | speedup: 1.362x | 0.495 TFLOPS | 8.1% peak
+
+  Benchmarking: large ...
+    kernel: 77.46 us | pytorch: 103.40 us | speedup: 1.335x | 0.866 TFLOPS | 14.1% peak
+
+  Benchmarking: xlarge ...
+    kernel: 275.16 us | pytorch: 327.78 us | speedup: 1.191x | 0.976 TFLOPS | 15.9% peak
+
+  Benchmarking: wide ...
+    kernel: 126.31 us | pytorch: 114.23 us | speedup: 0.904x | 0.531 TFLOPS | 8.6% peak
+
+  Benchmarking: llm_7b ...
+    kernel: 150.53 us | pytorch: 178.98 us | speedup: 1.189x | 0.892 TFLOPS | 14.5% peak
+
+  Benchmarking: llm_13b ...
+    kernel: 317.99 us | pytorch: 221.71 us | speedup: 0.697x | 0.528 TFLOPS | 8.6% peak
+
+--- Performance Summary (primary: large) ---
+latency_us: 77.46
+latency_ms: 0.0775
+throughput_tflops: 0.866
+bandwidth_gb_s: 433.3
+pct_peak_compute: 14.1%
+pct_peak_bandwidth: 86.7%
+arithmetic_intensity: 2.00
+ridge_point: 12.29
+bottleneck: memory_bound
+flops: 67108864
+bytes: 33562624
+peak_vram_mb: 384.1
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 103.40
+pytorch_latency_ms: 0.1034
+kernel_latency_us: 77.46
+kernel_latency_ms: 0.0775
+speedup_vs_pytorch: 1.335x
+pytorch_tflops: 0.649
+kernel_tflops: 0.866
+
+=== SIZE SWEEP ===
+size            kernel_us   pytorch_us    speedup     tflops    %peak
+------------------------------------------------------------------
+tiny                 6.43         8.14     1.266x      0.005     0.1%
+small                7.80        10.53     1.349x      0.134     2.2%
+medium              16.94        23.08     1.362x      0.495     8.1%
+large               77.46       103.40     1.335x      0.866    14.1%
+xlarge             275.16       327.78     1.191x      0.976    15.9%
+wide               126.31       114.23     0.904x      0.531     8.6%
+llm_7b             150.53       178.98     1.189x      0.892    14.5%
+llm_13b            317.99       221.71     0.697x      0.528     8.6%
+
+=== FINAL ===
+kernel_type: layernorm
+correctness: FAIL
+throughput_tflops: 0.866
+speedup_vs_pytorch: 1.335x
+pct_peak_compute: 14.1%
+bench_time_seconds: 3.3
+
+[exit=0 elapsed=9.7s]
+
+##############################################################################
+# CONFIG: kernel=layernorm backend=cuda
+# source=/home/repos/autokernel/kernels/cuda/layernorm.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: layernorm
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 6.144
+gpu_peak_tflops_bf16: 6.144
+gpu_peak_tflops_fp32: 3.072
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  PASS (max_abs_error=0.000000e+00)
+
+--- Stage 2: Shape Sweep ---
+  PASS: tiny torch.float16 (max_err=0.00e+00, within_tol=100.0%)
+  FAIL: tiny torch.bfloat16 -> max_abs_error=1.562500e-02 exceeds tol(atol=0.002, rtol=0.002)
+  FAIL: tiny torch.float32 -> max_abs_error=1.715183e-03 exceeds tol(atol=1e-05, rtol=1e-05)
+  PASS: small torch.float16 (max_err=2.44e-04, within_tol=100.0%)
+  FAIL: small torch.bfloat16 -> max_abs_error=3.125000e-02 exceeds tol(atol=0.002, rtol=0.002)
+  FAIL: small torch.float32 -> max_abs_error=2.943039e-03 exceeds tol(atol=1e-05, rtol=1e-05)
+  PASS: medium torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  FAIL: medium torch.bfloat16 -> max_abs_error=3.125000e-02 exceeds tol(atol=0.002, rtol=0.002)
+  FAIL: medium torch.float32 -> max_abs_error=3.632069e-03 exceeds tol(atol=1e-05, rtol=1e-05)
+  PASS: large torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  FAIL: large torch.bfloat16 -> max_abs_error=3.125000e-02 exceeds tol(atol=0.002, rtol=0.002)
+  FAIL: large torch.float32 -> max_abs_error=3.685474e-03 exceeds tol(atol=1e-05, rtol=1e-05)
+  PASS: xlarge torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  FAIL: xlarge torch.bfloat16 -> max_abs_error=3.125000e-02 exceeds tol(atol=0.002, rtol=0.002)
+  FAIL: xlarge torch.float32 -> max_abs_error=3.838539e-03 exceeds tol(atol=1e-05, rtol=1e-05)
+  PASS: wide torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  FAIL: wide torch.bfloat16 -> max_abs_error=3.125000e-02 exceeds tol(atol=0.002, rtol=0.002)
+  FAIL: wide torch.float32 -> max_abs_error=3.750801e-03 exceeds tol(atol=1e-05, rtol=1e-05)
+  PASS: llm_7b torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  FAIL: llm_7b torch.bfloat16 -> max_abs_error=3.125000e-02 exceeds tol(atol=0.002, rtol=0.002)
+  FAIL: llm_7b torch.float32 -> max_abs_error=3.838539e-03 exceeds tol(atol=1e-05, rtol=1e-05)
+  PASS: llm_13b torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  FAIL: llm_13b torch.bfloat16 -> max_abs_error=3.125000e-02 exceeds tol(atol=0.002, rtol=0.002)
+  FAIL: llm_13b torch.float32 -> max_abs_error=3.788471e-03 exceeds tol(atol=1e-05, rtol=1e-05)
+  shape_sweep: FAIL (16/24 failed)
+
+--- Stage 3: Numerical Stability ---
+  PASS: near_max -> both have NaN/Inf (expected overflow)
+  PASS: near_zero (max_err=0.00e+00)
+  PASS: mixed_scale (max_err=2.50e-01)
+  PASS: all_zeros (max_err=0.00e+00)
+  PASS: all_same (max_err=0.00e+00)
+  numerical_stability: PASS
+
+--- Stage 4: Determinism ---
+  PASS: 3 runs are bitwise identical
+
+--- Stage 5: Edge Cases ---
+  FAIL: edge_1023 -> NaN/Inf
+  FAIL: edge_4097 -> NaN/Inf
+  edge_cases: FAIL
+
+correctness: FAIL
+
+--- Correctness Summary ---
+smoke_test: PASS
+shape_sweep: FAIL (16/24 failed)
+numerical_stability: PASS
+determinism: PASS
+edge_cases: FAIL
+correctness: FAIL
+
+=== PERFORMANCE (large: batch=4096, dim=2048, dtype=torch.float16) ===
+
+  Benchmarking: tiny ...
+    kernel: 8.20 us | pytorch: 8.12 us | speedup: 0.989x | 0.004 TFLOPS | 0.1% peak
+
+  Benchmarking: small ...
+    kernel: 11.82 us | pytorch: 10.54 us | speedup: 0.892x | 0.089 TFLOPS | 1.4% peak
+
+  Benchmarking: medium ...
+    kernel: 29.66 us | pytorch: 23.17 us | speedup: 0.781x | 0.283 TFLOPS | 4.6% peak
+
+  Benchmarking: large ...
+    kernel: 187.17 us | pytorch: 103.43 us | speedup: 0.553x | 0.359 TFLOPS | 5.8% peak
+
+  Benchmarking: xlarge ...
+    kernel: 604.22 us | pytorch: 327.71 us | speedup: 0.542x | 0.444 TFLOPS | 7.2% peak
+
+  Benchmarking: wide ...
+    kernel: 166.97 us | pytorch: 114.22 us | speedup: 0.684x | 0.402 TFLOPS | 6.5% peak
+
+  Benchmarking: llm_7b ...
+    kernel: 307.07 us | pytorch: 179.04 us | speedup: 0.583x | 0.437 TFLOPS | 7.1% peak
+
+  Benchmarking: llm_13b ...
+    kernel: 390.29 us | pytorch: 221.85 us | speedup: 0.568x | 0.430 TFLOPS | 7.0% peak
+
+--- Performance Summary (primary: large) ---
+latency_us: 187.17
+latency_ms: 0.1872
+throughput_tflops: 0.359
+bandwidth_gb_s: 179.3
+pct_peak_compute: 5.8%
+pct_peak_bandwidth: 35.9%
+arithmetic_intensity: 2.00
+ridge_point: 12.29
+bottleneck: memory_bound
+flops: 67108864
+bytes: 33562624
+peak_vram_mb: 384.1
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 103.43
+pytorch_latency_ms: 0.1034
+kernel_latency_us: 187.17
+kernel_latency_ms: 0.1872
+speedup_vs_pytorch: 0.553x
+pytorch_tflops: 0.649
+kernel_tflops: 0.359
+
+=== SIZE SWEEP ===
+size            kernel_us   pytorch_us    speedup     tflops    %peak
+------------------------------------------------------------------
+tiny                 8.20         8.12     0.989x      0.004     0.1%
+small               11.82        10.54     0.892x      0.089     1.4%
+medium              29.66        23.17     0.781x      0.283     4.6%
+large              187.17       103.43     0.553x      0.359     5.8%
+xlarge             604.22       327.71     0.542x      0.444     7.2%
+wide               166.97       114.22     0.684x      0.402     6.5%
+llm_7b             307.07       179.04     0.583x      0.437     7.1%
+llm_13b            390.29       221.85     0.568x      0.430     7.0%
+
+=== FINAL ===
+kernel_type: layernorm
+correctness: FAIL
+throughput_tflops: 0.359
+speedup_vs_pytorch: 0.553x
+pct_peak_compute: 5.8%
+bench_time_seconds: 2.7
+
+[exit=0 elapsed=9.2s]
+
+##############################################################################
+# CONFIG: kernel=rmsnorm backend=triton
+# source=/home/repos/autokernel/kernels/rmsnorm.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: rmsnorm
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 6.144
+gpu_peak_tflops_bf16: 6.144
+gpu_peak_tflops_fp32: 3.072
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  PASS (max_abs_error=7.812500e-03)
+
+--- Stage 2: Shape Sweep ---
+  PASS: small torch.float16 (max_err=7.81e-03, within_tol=100.0%)
+  PASS: small torch.bfloat16 (max_err=6.25e-02, within_tol=100.0%)
+  PASS: medium torch.float16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: medium torch.bfloat16 (max_err=6.25e-02, within_tol=100.0%)
+  PASS: large torch.float16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: large torch.bfloat16 (max_err=1.25e-01, within_tol=100.0%)
+  PASS: llama torch.float16 (max_err=7.81e-03, within_tol=100.0%)
+  PASS: llama torch.bfloat16 (max_err=1.25e-01, within_tol=100.0%)
+  shape_sweep: PASS (8 configs, worst_err=1.25e-01)
+
+--- Stage 3: Numerical Stability ---
+  PASS: near_max -> both have NaN/Inf (expected overflow)
+  PASS: near_zero (max_err=0.00e+00)
+  FAIL: mixed_scale -> max_abs_error=1.606400e+04 exceeds tol(atol=0.1, rtol=0.1)
+  PASS: all_zeros (max_err=0.00e+00)
+  PASS: all_same (max_err=0.00e+00)
+  numerical_stability: FAIL
+
+--- Stage 4: Determinism ---
+  PASS: 3 runs are bitwise identical
+
+--- Stage 5: Edge Cases ---
+  PASS: edge_1023 (max_err=7.81e-03)
+  PASS: edge_4097 (max_err=1.56e-02)
+  edge_cases: PASS
+
+correctness: FAIL
+
+--- Correctness Summary ---
+smoke_test: PASS
+shape_sweep: PASS (8 configs, worst_err=1.25e-01 at large/torch.bfloat16)
+numerical_stability: FAIL
+determinism: PASS
+edge_cases: PASS
+correctness: FAIL
+
+=== PERFORMANCE (large: M=4096, N=4096, dtype=torch.float16) ===
+
+  Benchmarking: small ...
+    kernel: 13.67 us | pytorch: 69.39 us | speedup: 5.077x | 0.345 TFLOPS | 5.6% peak
+
+  Benchmarking: medium ...
+    kernel: 46.93 us | pytorch: 199.46 us | speedup: 4.250x | 0.536 TFLOPS | 8.7% peak
+
+  Benchmarking: large ...
+    kernel: 136.20 us | pytorch: 636.11 us | speedup: 4.670x | 0.739 TFLOPS | 12.0% peak
+
+  Benchmarking: llama ...
+    kernel: 79.07 us | pytorch: 345.69 us | speedup: 4.372x | 0.637 TFLOPS | 10.4% peak
+
+--- Performance Summary (primary: large) ---
+latency_us: 136.20
+latency_ms: 0.1362
+throughput_tflops: 0.739
+bandwidth_gb_s: 492.8
+pct_peak_compute: 12.0%
+pct_peak_bandwidth: 98.6%
+arithmetic_intensity: 1.50
+ridge_point: 12.29
+bottleneck: memory_bound
+flops: 100663296
+bytes: 67117056
+peak_vram_mb: 352.0
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 636.11
+pytorch_latency_ms: 0.6361
+kernel_latency_us: 136.20
+kernel_latency_ms: 0.1362
+speedup_vs_pytorch: 4.670x
+pytorch_tflops: 0.158
+kernel_tflops: 0.739
+
+=== SIZE SWEEP ===
+size            kernel_us   pytorch_us    speedup     tflops    %peak
+------------------------------------------------------------------
+small               13.67        69.39     5.077x      0.345     5.6%
+medium              46.93       199.46     4.250x      0.536     8.7%
+large              136.20       636.11     4.670x      0.739    12.0%
+llama               79.07       345.69     4.372x      0.637    10.4%
+
+=== FINAL ===
+kernel_type: rmsnorm
+correctness: FAIL
+throughput_tflops: 0.739
+speedup_vs_pytorch: 4.670x
+pct_peak_compute: 12.0%
+bench_time_seconds: 2.4
+
+[exit=0 elapsed=8.7s]
+
+##############################################################################
+# CONFIG: kernel=rmsnorm backend=cuda
+# source=/home/repos/autokernel/kernels/cuda/rmsnorm.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: rmsnorm
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 6.144
+gpu_peak_tflops_bf16: 6.144
+gpu_peak_tflops_fp32: 3.072
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  PASS (max_abs_error=7.812500e-03)
+
+--- Stage 2: Shape Sweep ---
+  PASS: small torch.float16 (max_err=7.81e-03, within_tol=100.0%)
+  PASS: small torch.bfloat16 (max_err=6.25e-02, within_tol=100.0%)
+  PASS: medium torch.float16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: medium torch.bfloat16 (max_err=6.25e-02, within_tol=100.0%)
+  PASS: large torch.float16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: large torch.bfloat16 (max_err=1.25e-01, within_tol=100.0%)
+  PASS: llama torch.float16 (max_err=7.81e-03, within_tol=100.0%)
+  PASS: llama torch.bfloat16 (max_err=1.25e-01, within_tol=100.0%)
+  shape_sweep: PASS (8 configs, worst_err=1.25e-01)
+
+--- Stage 3: Numerical Stability ---
+  PASS: near_max -> both have NaN/Inf (expected overflow)
+  PASS: near_zero (max_err=0.00e+00)
+  FAIL: mixed_scale -> max_abs_error=1.606400e+04 exceeds tol(atol=0.1, rtol=0.1)
+  PASS: all_zeros (max_err=0.00e+00)
+  PASS: all_same (max_err=0.00e+00)
+  numerical_stability: FAIL
+
+--- Stage 4: Determinism ---
+  PASS: 3 runs are bitwise identical
+
+--- Stage 5: Edge Cases ---
+  PASS: edge_1023 (max_err=7.81e-03)
+  PASS: edge_4097 (max_err=1.56e-02)
+  edge_cases: PASS
+
+correctness: FAIL
+
+--- Correctness Summary ---
+smoke_test: PASS
+shape_sweep: PASS (8 configs, worst_err=1.25e-01 at large/torch.bfloat16)
+numerical_stability: FAIL
+determinism: PASS
+edge_cases: PASS
+correctness: FAIL
+
+=== PERFORMANCE (large: M=4096, N=4096, dtype=torch.float16) ===
+
+  Benchmarking: small ...
+    kernel: 14.23 us | pytorch: 69.09 us | speedup: 4.855x | 0.332 TFLOPS | 5.4% peak
+
+  Benchmarking: medium ...
+    kernel: 47.86 us | pytorch: 199.55 us | speedup: 4.170x | 0.526 TFLOPS | 8.6% peak
+
+  Benchmarking: large ...
+    kernel: 134.83 us | pytorch: 635.92 us | speedup: 4.717x | 0.747 TFLOPS | 12.2% peak
+
+  Benchmarking: llama ...
+    kernel: 77.79 us | pytorch: 343.55 us | speedup: 4.416x | 0.647 TFLOPS | 10.5% peak
+
+--- Performance Summary (primary: large) ---
+latency_us: 134.83
+latency_ms: 0.1348
+throughput_tflops: 0.747
+bandwidth_gb_s: 497.8
+pct_peak_compute: 12.2%
+pct_peak_bandwidth: 99.6%
+arithmetic_intensity: 1.50
+ridge_point: 12.29
+bottleneck: memory_bound
+flops: 100663296
+bytes: 67117056
+peak_vram_mb: 352.0
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 635.92
+pytorch_latency_ms: 0.6359
+kernel_latency_us: 134.83
+kernel_latency_ms: 0.1348
+speedup_vs_pytorch: 4.717x
+pytorch_tflops: 0.158
+kernel_tflops: 0.747
+
+=== SIZE SWEEP ===
+size            kernel_us   pytorch_us    speedup     tflops    %peak
+------------------------------------------------------------------
+small               14.23        69.09     4.855x      0.332     5.4%
+medium              47.86       199.55     4.170x      0.526     8.6%
+large              134.83       635.92     4.717x      0.747    12.2%
+llama               77.79       343.55     4.416x      0.647    10.5%
+
+=== FINAL ===
+kernel_type: rmsnorm
+correctness: FAIL
+throughput_tflops: 0.747
+speedup_vs_pytorch: 4.717x
+pct_peak_compute: 12.2%
+bench_time_seconds: 1.8
+
+[exit=0 elapsed=8.1s]
+
+##############################################################################
+# CONFIG: kernel=flash_attention backend=triton
+# source=/home/repos/autokernel/kernels/flash_attention.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: flash_attention
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 6.144
+gpu_peak_tflops_bf16: 6.144
+gpu_peak_tflops_fp32: 3.072
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  PASS (max_abs_error=1.953125e-03)
+
+--- Stage 2: Shape Sweep ---
+  PASS: tiny torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  PASS: tiny torch.bfloat16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: small torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  PASS: small torch.bfloat16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: medium torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  PASS: medium torch.bfloat16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: large torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  PASS: large torch.bfloat16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: xlarge torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  PASS: xlarge torch.bfloat16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: long torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  PASS: long torch.bfloat16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: gqa torch.float16 (max_err=2.69e-03, within_tol=100.0%)
+  PASS: gqa torch.bfloat16 (max_err=2.34e-02, within_tol=100.0%)
+  PASS: llm_7b torch.float16 (max_err=2.69e-03, within_tol=100.0%)
+  PASS: llm_7b torch.bfloat16 (max_err=2.34e-02, within_tol=100.0%)
+  shape_sweep: PASS (16 configs, worst_err=2.34e-02)
+
+--- Stage 3: Numerical Stability ---
+  PASS: near_max -> both have NaN/Inf (expected overflow)
+  PASS: near_zero (max_err=5.96e-08)
+  FAIL: mixed_scale -> max_abs_error=nan exceeds tol(atol=0.1, rtol=0.1)
+  PASS: all_zeros (max_err=0.00e+00)
+  PASS: all_same (max_err=2.44e-04)
+  numerical_stability: FAIL
+
+--- Stage 4: Determinism ---
+  PASS: 3 runs are bitwise identical
+
+--- Stage 5: Edge Cases ---
+  PASS: edge_127 (max_err=1.95e-03)
+  PASS: edge_1023 (max_err=1.95e-03)
+  edge_cases: PASS
+
+correctness: FAIL
+
+--- Correctness Summary ---
+smoke_test: PASS
+shape_sweep: PASS (16 configs, worst_err=2.34e-02 at gqa/torch.bfloat16)
+numerical_stability: FAIL
+determinism: PASS
+edge_cases: PASS
+correctness: FAIL
+
+=== PERFORMANCE (large: batch=2, heads=32, seq_len=1024, head_dim=64, dtype=torch.float16) ===
+
+  Benchmarking: tiny ...
+    kernel: 17.25 us | pytorch: 42.79 us | speedup: 2.480x | 0.243 TFLOPS | 4.0% peak
+
+  Benchmarking: small ...
+    kernel: 85.48 us | pytorch: 106.69 us | speedup: 1.248x | 3.140 TFLOPS | 51.1% peak
+
+  Benchmarking: medium ...
+    kernel: 461.62 us | pytorch: 450.99 us | speedup: 0.977x | 4.652 TFLOPS | 75.7% peak
+
+  Benchmarking: large ...
+    kernel: 2754.55 us | pytorch: 3269.27 us | speedup: 1.187x | 6.237 TFLOPS | 101.5% peak
+
+  Benchmarking: xlarge ...
+    kernel: 9668.90 us | pytorch: 12637.94 us | speedup: 1.307x | 7.107 TFLOPS | 115.7% peak
+
+  Benchmarking: long ...
+    kernel: 17885.57 us | pytorch: 25365.02 us | speedup: 1.418x | 7.684 TFLOPS | 125.1% peak
+
+  Benchmarking: gqa ...
+    kernel: 8174.22 us | pytorch: 3335.41 us | speedup: 0.408x | 4.203 TFLOPS | 68.4% peak
+
+  Benchmarking: llm_7b ...
+    kernel: 14821.09 us | pytorch: 6632.56 us | speedup: 0.448x | 4.637 TFLOPS | 75.5% peak
+
+--- Performance Summary (primary: large) ---
+latency_us: 2754.55
+latency_ms: 2.7545
+throughput_tflops: 6.237
+bandwidth_gb_s: 12.2
+pct_peak_compute: 101.5%
+pct_peak_bandwidth: 2.4%
+arithmetic_intensity: 512.00
+ridge_point: 12.29
+bottleneck: compute_bound
+flops: 17179869184
+bytes: 33554432
+peak_vram_mb: 2368.0
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 3269.27
+pytorch_latency_ms: 3.2693
+kernel_latency_us: 2754.55
+kernel_latency_ms: 2.7545
+speedup_vs_pytorch: 1.187x
+pytorch_tflops: 5.255
+kernel_tflops: 6.237
+
+=== SIZE SWEEP ===
+size            kernel_us   pytorch_us    speedup     tflops    %peak
+------------------------------------------------------------------
+tiny                17.25        42.79     2.480x      0.243     4.0%
+small               85.48       106.69     1.248x      3.140    51.1%
+medium             461.62       450.99     0.977x      4.652    75.7%
+large             2754.55      3269.27     1.187x      6.237   101.5%
+xlarge            9668.90     12637.94     1.307x      7.107   115.7%
+long             17885.57     25365.02     1.418x      7.684   125.1%
+gqa               8174.22      3335.41     0.408x      4.203    68.4%
+llm_7b           14821.09      6632.56     0.448x      4.637    75.5%
+
+=== FINAL ===
+kernel_type: flash_attention
+correctness: FAIL
+throughput_tflops: 6.237
+speedup_vs_pytorch: 1.187x
+pct_peak_compute: 101.5%
+bench_time_seconds: 4.2
+
+[exit=0 elapsed=10.7s]
+
+##############################################################################
+# CONFIG: kernel=flash_attention backend=cuda
+# source=/home/repos/autokernel/kernels/cuda/flash_attention.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: flash_attention
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 6.144
+gpu_peak_tflops_bf16: 6.144
+gpu_peak_tflops_fp32: 3.072
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  PASS (max_abs_error=1.953125e-03)
+
+--- Stage 2: Shape Sweep ---
+  PASS: tiny torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  PASS: tiny torch.bfloat16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: small torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  PASS: small torch.bfloat16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: medium torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  PASS: medium torch.bfloat16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: large torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  PASS: large torch.bfloat16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: xlarge torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  PASS: xlarge torch.bfloat16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: long torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  PASS: long torch.bfloat16 (max_err=1.56e-02, within_tol=100.0%)
+  PASS: gqa torch.float16 (max_err=2.69e-03, within_tol=100.0%)
+  PASS: gqa torch.bfloat16 (max_err=2.34e-02, within_tol=100.0%)
+  PASS: llm_7b torch.float16 (max_err=2.69e-03, within_tol=100.0%)
+  PASS: llm_7b torch.bfloat16 (max_err=2.34e-02, within_tol=100.0%)
+  shape_sweep: PASS (16 configs, worst_err=2.34e-02)
+
+--- Stage 3: Numerical Stability ---
+  PASS: near_max -> both have NaN/Inf (expected overflow)
+  PASS: near_zero (max_err=5.96e-08)
+  FAIL: mixed_scale -> max_abs_error=nan exceeds tol(atol=0.1, rtol=0.1)
+  PASS: all_zeros (max_err=0.00e+00)
+  PASS: all_same (max_err=2.44e-04)
+  numerical_stability: FAIL
+
+--- Stage 4: Determinism ---
+  PASS: 3 runs are bitwise identical
+
+--- Stage 5: Edge Cases ---
+  PASS: edge_127 (max_err=1.95e-03)
+  PASS: edge_1023 (max_err=1.95e-03)
+  edge_cases: PASS
+
+correctness: FAIL
+
+--- Correctness Summary ---
+smoke_test: PASS
+shape_sweep: PASS (16 configs, worst_err=2.34e-02 at gqa/torch.bfloat16)
+numerical_stability: FAIL
+determinism: PASS
+edge_cases: PASS
+correctness: FAIL
+
+=== PERFORMANCE (large: batch=2, heads=32, seq_len=1024, head_dim=64, dtype=torch.float16) ===
+
+  Benchmarking: tiny ...
+    kernel: 702.66 us | pytorch: 41.96 us | speedup: 0.060x | 0.006 TFLOPS | 0.1% peak
+
+  Benchmarking: small ...
+    kernel: 11299.11 us | pytorch: 103.69 us | speedup: 0.009x | 0.024 TFLOPS | 0.4% peak
+
+  Benchmarking: medium ...
+    kernel: 90439.87 us | pytorch: 445.70 us | speedup: 0.005x | 0.024 TFLOPS | 0.4% peak
+
+  Benchmarking: large ...
+    kernel: 722726.93 us | pytorch: 3270.03 us | speedup: 0.005x | 0.024 TFLOPS | 0.4% peak
+
+  Benchmarking: xlarge ...
+    kernel: 2877424.32 us | pytorch: 12629.05 us | speedup: 0.004x | 0.024 TFLOPS | 0.4% peak
+
+  Benchmarking: long ...
+    SKIP: long -> TIMEOUT
+
+  Benchmarking: gqa ...
+    kernel: 1445882.57 us | pytorch: 3332.60 us | speedup: 0.002x | 0.024 TFLOPS | 0.4% peak
+
+  Benchmarking: llm_7b ...
+    kernel: 2985706.30 us | pytorch: 6625.23 us | speedup: 0.002x | 0.023 TFLOPS | 0.4% peak
+
+--- Performance Summary (primary: large) ---
+latency_us: 722726.93
+latency_ms: 722.7269
+throughput_tflops: 0.024
+bandwidth_gb_s: 0.0
+pct_peak_compute: 0.4%
+pct_peak_bandwidth: 0.0%
+arithmetic_intensity: 512.00
+ridge_point: 12.29
+bottleneck: compute_bound
+flops: 17179869184
+bytes: 33554432
+peak_vram_mb: 1332.0
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 3270.03
+pytorch_latency_ms: 3.2700
+kernel_latency_us: 722726.93
+kernel_latency_ms: 722.7269
+speedup_vs_pytorch: 0.005x
+pytorch_tflops: 5.254
+kernel_tflops: 0.024
+
+=== SIZE SWEEP ===
+size            kernel_us   pytorch_us    speedup     tflops    %peak
+------------------------------------------------------------------
+tiny               702.66        41.96     0.060x      0.006     0.1%
+small            11299.11       103.69     0.009x      0.024     0.4%
+medium           90439.87       445.70     0.005x      0.024     0.4%
+large           722726.93      3270.03     0.005x      0.024     0.4%
+xlarge         2877424.32     12629.05     0.004x      0.024     0.4%
+gqa            1445882.57      3332.60     0.002x      0.024     0.4%
+llm_7b         2985706.30      6625.23     0.002x      0.023     0.4%
+
+=== FINAL ===
+kernel_type: flash_attention
+correctness: FAIL
+throughput_tflops: 0.024
+speedup_vs_pytorch: 0.005x
+pct_peak_compute: 0.4%
+bench_time_seconds: 129.8
+WARNING: bench.py took 129.8s (budget: 90s)
+
+[exit=0 elapsed=135.7s]
+
+##############################################################################
+# CONFIG: kernel=fused_mlp backend=triton
+# source=/home/repos/autokernel/kernels/fused_mlp.py
+##############################################################################
+Traceback (most recent call last):
+  File "/home/repos/autokernel/bench.py", line 1058, in run_performance
+    kernel_ms = _do_bench(lambda: kernel_fn(**inputs), warmup=25, rep=100)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/repos/autokernel/bench.py", line 978, in _do_bench
+    ms = do_bench(fn, warmup=warmup, rep=rep)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/testing.py", line 124, in do_bench
+    fn()
+  File "/home/repos/autokernel/bench.py", line 1058, in <lambda>
+    kernel_ms = _do_bench(lambda: kernel_fn(**inputs), warmup=25, rep=100)
+                                  ^^^^^^^^^^^^^^^^^^^
+  File "/home/repos/autokernel/kernel.py", line 160, in kernel_fn
+    fused_gate_up_kernel[grid](
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 376, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 682, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/compiler/compiler.py", line 231, in compile
+    key = f"{triton_key()}-{src.hash()}-{backend.hash()}-{options.hash()}-{str(sorted(env_vars.items()))}"
+                            ^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/compiler/compiler.py", line 96, in hash
+    key = f"{self.fn.cache_key}-{self.attrs.hash()}-{sorted_sig}-{sorted_constants}"
+             ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 783, in cache_key
+    dependencies_finder.visit(self.parse())
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 194, in visit_FunctionDef
+    self.generic_visit(node)
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 248, in visit_Assign
+    self.generic_visit(node)
+  File "/usr/local/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 187, in visit_Attribute
+    ret = getattr(lhs, node.attr)
+          ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'triton.language.math' has no attribute 'tanh'
+Traceback (most recent call last):
+  File "/home/repos/autokernel/bench.py", line 1058, in run_performance
+    kernel_ms = _do_bench(lambda: kernel_fn(**inputs), warmup=25, rep=100)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/repos/autokernel/bench.py", line 978, in _do_bench
+    ms = do_bench(fn, warmup=warmup, rep=rep)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/testing.py", line 124, in do_bench
+    fn()
+  File "/home/repos/autokernel/bench.py", line 1058, in <lambda>
+    kernel_ms = _do_bench(lambda: kernel_fn(**inputs), warmup=25, rep=100)
+                                  ^^^^^^^^^^^^^^^^^^^
+  File "/home/repos/autokernel/kernel.py", line 160, in kernel_fn
+    fused_gate_up_kernel[grid](
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 376, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 682, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/compiler/compiler.py", line 231, in compile
+    key = f"{triton_key()}-{src.hash()}-{backend.hash()}-{options.hash()}-{str(sorted(env_vars.items()))}"
+                            ^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/compiler/compiler.py", line 96, in hash
+    key = f"{self.fn.cache_key}-{self.attrs.hash()}-{sorted_sig}-{sorted_constants}"
+             ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 783, in cache_key
+    dependencies_finder.visit(self.parse())
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 194, in visit_FunctionDef
+    self.generic_visit(node)
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 248, in visit_Assign
+    self.generic_visit(node)
+  File "/usr/local/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 187, in visit_Attribute
+    ret = getattr(lhs, node.attr)
+          ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'triton.language.math' has no attribute 'tanh'
+Traceback (most recent call last):
+  File "/home/repos/autokernel/bench.py", line 1058, in run_performance
+    kernel_ms = _do_bench(lambda: kernel_fn(**inputs), warmup=25, rep=100)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/repos/autokernel/bench.py", line 978, in _do_bench
+    ms = do_bench(fn, warmup=warmup, rep=rep)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/testing.py", line 124, in do_bench
+    fn()
+  File "/home/repos/autokernel/bench.py", line 1058, in <lambda>
+    kernel_ms = _do_bench(lambda: kernel_fn(**inputs), warmup=25, rep=100)
+                                  ^^^^^^^^^^^^^^^^^^^
+  File "/home/repos/autokernel/kernel.py", line 160, in kernel_fn
+    fused_gate_up_kernel[grid](
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 376, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 682, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/compiler/compiler.py", line 231, in compile
+    key = f"{triton_key()}-{src.hash()}-{backend.hash()}-{options.hash()}-{str(sorted(env_vars.items()))}"
+                            ^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/compiler/compiler.py", line 96, in hash
+    key = f"{self.fn.cache_key}-{self.attrs.hash()}-{sorted_sig}-{sorted_constants}"
+             ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 783, in cache_key
+    dependencies_finder.visit(self.parse())
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 194, in visit_FunctionDef
+    self.generic_visit(node)
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 248, in visit_Assign
+    self.generic_visit(node)
+  File "/usr/local/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 187, in visit_Attribute
+    ret = getattr(lhs, node.attr)
+          ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'triton.language.math' has no attribute 'tanh'
+Traceback (most recent call last):
+  File "/home/repos/autokernel/bench.py", line 1058, in run_performance
+    kernel_ms = _do_bench(lambda: kernel_fn(**inputs), warmup=25, rep=100)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/repos/autokernel/bench.py", line 978, in _do_bench
+    ms = do_bench(fn, warmup=warmup, rep=rep)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/testing.py", line 124, in do_bench
+    fn()
+  File "/home/repos/autokernel/bench.py", line 1058, in <lambda>
+    kernel_ms = _do_bench(lambda: kernel_fn(**inputs), warmup=25, rep=100)
+                                  ^^^^^^^^^^^^^^^^^^^
+  File "/home/repos/autokernel/kernel.py", line 160, in kernel_fn
+    fused_gate_up_kernel[grid](
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 376, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 682, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/compiler/compiler.py", line 231, in compile
+    key = f"{triton_key()}-{src.hash()}-{backend.hash()}-{options.hash()}-{str(sorted(env_vars.items()))}"
+                            ^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/compiler/compiler.py", line 96, in hash
+    key = f"{self.fn.cache_key}-{self.attrs.hash()}-{sorted_sig}-{sorted_constants}"
+             ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 783, in cache_key
+    dependencies_finder.visit(self.parse())
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 194, in visit_FunctionDef
+    self.generic_visit(node)
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 248, in visit_Assign
+    self.generic_visit(node)
+  File "/usr/local/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 187, in visit_Attribute
+    ret = getattr(lhs, node.attr)
+          ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'triton.language.math' has no attribute 'tanh'
+Traceback (most recent call last):
+  File "/home/repos/autokernel/bench.py", line 1058, in run_performance
+    kernel_ms = _do_bench(lambda: kernel_fn(**inputs), warmup=25, rep=100)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/repos/autokernel/bench.py", line 978, in _do_bench
+    ms = do_bench(fn, warmup=warmup, rep=rep)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/testing.py", line 124, in do_bench
+    fn()
+  File "/home/repos/autokernel/bench.py", line 1058, in <lambda>
+    kernel_ms = _do_bench(lambda: kernel_fn(**inputs), warmup=25, rep=100)
+                                  ^^^^^^^^^^^^^^^^^^^
+  File "/home/repos/autokernel/kernel.py", line 160, in kernel_fn
+    fused_gate_up_kernel[grid](
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 376, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 682, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/compiler/compiler.py", line 231, in compile
+    key = f"{triton_key()}-{src.hash()}-{backend.hash()}-{options.hash()}-{str(sorted(env_vars.items()))}"
+                            ^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/compiler/compiler.py", line 96, in hash
+    key = f"{self.fn.cache_key}-{self.attrs.hash()}-{sorted_sig}-{sorted_constants}"
+             ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 783, in cache_key
+    dependencies_finder.visit(self.parse())
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 194, in visit_FunctionDef
+    self.generic_visit(node)
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 248, in visit_Assign
+    self.generic_visit(node)
+  File "/usr/local/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 187, in visit_Attribute
+    ret = getattr(lhs, node.attr)
+          ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'triton.language.math' has no attribute 'tanh'
+Traceback (most recent call last):
+  File "/home/repos/autokernel/bench.py", line 1058, in run_performance
+    kernel_ms = _do_bench(lambda: kernel_fn(**inputs), warmup=25, rep=100)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/repos/autokernel/bench.py", line 978, in _do_bench
+    ms = do_bench(fn, warmup=warmup, rep=rep)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/testing.py", line 124, in do_bench
+    fn()
+  File "/home/repos/autokernel/bench.py", line 1058, in <lambda>
+    kernel_ms = _do_bench(lambda: kernel_fn(**inputs), warmup=25, rep=100)
+                                  ^^^^^^^^^^^^^^^^^^^
+  File "/home/repos/autokernel/kernel.py", line 160, in kernel_fn
+    fused_gate_up_kernel[grid](
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 376, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 682, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/compiler/compiler.py", line 231, in compile
+    key = f"{triton_key()}-{src.hash()}-{backend.hash()}-{options.hash()}-{str(sorted(env_vars.items()))}"
+                            ^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/compiler/compiler.py", line 96, in hash
+    key = f"{self.fn.cache_key}-{self.attrs.hash()}-{sorted_sig}-{sorted_constants}"
+             ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 783, in cache_key
+    dependencies_finder.visit(self.parse())
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 194, in visit_FunctionDef
+    self.generic_visit(node)
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 248, in visit_Assign
+    self.generic_visit(node)
+  File "/usr/local/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 187, in visit_Attribute
+    ret = getattr(lhs, node.attr)
+          ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'triton.language.math' has no attribute 'tanh'
+Traceback (most recent call last):
+  File "/home/repos/autokernel/bench.py", line 1058, in run_performance
+    kernel_ms = _do_bench(lambda: kernel_fn(**inputs), warmup=25, rep=100)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/repos/autokernel/bench.py", line 978, in _do_bench
+    ms = do_bench(fn, warmup=warmup, rep=rep)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/testing.py", line 124, in do_bench
+    fn()
+  File "/home/repos/autokernel/bench.py", line 1058, in <lambda>
+    kernel_ms = _do_bench(lambda: kernel_fn(**inputs), warmup=25, rep=100)
+                                  ^^^^^^^^^^^^^^^^^^^
+  File "/home/repos/autokernel/kernel.py", line 160, in kernel_fn
+    fused_gate_up_kernel[grid](
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 376, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 682, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/compiler/compiler.py", line 231, in compile
+    key = f"{triton_key()}-{src.hash()}-{backend.hash()}-{options.hash()}-{str(sorted(env_vars.items()))}"
+                            ^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/compiler/compiler.py", line 96, in hash
+    key = f"{self.fn.cache_key}-{self.attrs.hash()}-{sorted_sig}-{sorted_constants}"
+             ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 783, in cache_key
+    dependencies_finder.visit(self.parse())
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 194, in visit_FunctionDef
+    self.generic_visit(node)
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 248, in visit_Assign
+    self.generic_visit(node)
+  File "/usr/local/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/usr/local/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/triton/runtime/jit.py", line 187, in visit_Attribute
+    ret = getattr(lhs, node.attr)
+          ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'triton.language.math' has no attribute 'tanh'
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: fused_mlp
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 6.144
+gpu_peak_tflops_bf16: 6.144
+gpu_peak_tflops_fp32: 3.072
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  FAIL: CRASH (AttributeError: module 'triton.language.math' has no attribute 'tanh')
+
+correctness: FAIL (smoke test failed, aborting remaining stages)
+
+--- Correctness Summary ---
+smoke_test: FAIL
+shape_sweep: SKIP
+numerical_stability: SKIP
+determinism: SKIP
+edge_cases: SKIP
+correctness: FAIL
+
+=== PERFORMANCE (large: batch=2048, dim=2048, hidden=5504, dtype=torch.float16) ===
+
+  Benchmarking: tiny ...
+    ERROR: tiny -> AttributeError: module 'triton.language.math' has no attribute 'tanh'
+
+  Benchmarking: small ...
+    ERROR: small -> AttributeError: module 'triton.language.math' has no attribute 'tanh'
+
+  Benchmarking: medium ...
+    ERROR: medium -> AttributeError: module 'triton.language.math' has no attribute 'tanh'
+
+  Benchmarking: large ...
+    ERROR: large -> AttributeError: module 'triton.language.math' has no attribute 'tanh'
+
+  Benchmarking: xlarge ...
+    ERROR: xlarge -> AttributeError: module 'triton.language.math' has no attribute 'tanh'
+
+  Benchmarking: llm_7b ...
+    ERROR: llm_7b -> AttributeError: module 'triton.language.math' has no attribute 'tanh'
+
+  Benchmarking: llm_13b ...
+    ERROR: llm_13b -> AttributeError: module 'triton.language.math' has no attribute 'tanh'
+
+latency_us: 0.00
+latency_ms: 0.0000
+throughput_tflops: 0.000
+bandwidth_gb_s: 0.0
+pct_peak_compute: 0.0%
+pct_peak_bandwidth: 0.0%
+peak_vram_mb: 838.0
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 0.00
+pytorch_latency_ms: 0.0000
+kernel_latency_us: 0.00
+kernel_latency_ms: 0.0000
+speedup_vs_pytorch: 0.000x
+
+=== FINAL ===
+kernel_type: fused_mlp
+correctness: FAIL
+throughput_tflops: 0.000
+speedup_vs_pytorch: 0.000x
+pct_peak_compute: 0.0%
+bench_time_seconds: 1.1
+
+[exit=0 elapsed=7.1s]
+
+##############################################################################
+# CONFIG: kernel=fused_mlp backend=cuda
+# source=/home/repos/autokernel/kernels/cuda/fused_mlp.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: fused_mlp
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 6.144
+gpu_peak_tflops_bf16: 6.144
+gpu_peak_tflops_fp32: 3.072
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+
+
+*** WATCHDOG TIMEOUT after 420s -> HUNG ***
+
+[exit=-9 elapsed=420.4s]
+
+##############################################################################
+# CONFIG: kernel=cross_entropy backend=triton
+# source=/home/repos/autokernel/kernels/cross_entropy.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: cross_entropy
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 2.048
+gpu_peak_tflops_bf16: 2.048
+gpu_peak_tflops_fp32: 1.024
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  PASS (max_abs_error=8.163452e-04)
+
+--- Stage 2: Shape Sweep ---
+  PASS: tiny torch.float16 (max_err=8.16e-04, within_tol=100.0%)
+  PASS: tiny torch.bfloat16 (max_err=4.64e-03, within_tol=100.0%)
+  PASS: tiny torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: small torch.float16 (max_err=4.65e-04, within_tol=100.0%)
+  PASS: small torch.bfloat16 (max_err=8.25e-03, within_tol=100.0%)
+  PASS: small torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: medium torch.float16 (max_err=2.29e-03, within_tol=100.0%)
+  PASS: medium torch.bfloat16 (max_err=5.43e-03, within_tol=100.0%)
+  PASS: medium torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: large torch.float16 (max_err=1.49e-03, within_tol=100.0%)
+  PASS: large torch.bfloat16 (max_err=1.50e-03, within_tol=100.0%)
+  PASS: large torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: xlarge torch.float16 (max_err=1.25e-03, within_tol=100.0%)
+  PASS: xlarge torch.bfloat16 (max_err=1.69e-02, within_tol=100.0%)
+  PASS: xlarge torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: llama torch.float16 (max_err=1.49e-03, within_tol=100.0%)
+  PASS: llama torch.bfloat16 (max_err=1.50e-03, within_tol=100.0%)
+  PASS: llama torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: gpt2 torch.float16 (max_err=3.44e-03, within_tol=100.0%)
+  PASS: gpt2 torch.bfloat16 (max_err=2.78e-02, within_tol=100.0%)
+  PASS: gpt2 torch.float32 (max_err=0.00e+00, within_tol=100.0%)
+  shape_sweep: PASS (21 configs, worst_err=2.78e-02)
+
+--- Stage 3: Numerical Stability ---
+  PASS: near_max -> both have NaN/Inf (expected overflow)
+  PASS: near_zero (max_err=1.78e-03)
+  PASS: mixed_scale (max_err=8.99e-01)
+  PASS: all_zeros (max_err=1.78e-03)
+  PASS: all_same (max_err=1.78e-03)
+  numerical_stability: PASS
+
+--- Stage 4: Determinism ---
+  PASS: 3 runs are bitwise identical
+
+--- Stage 5: Edge Cases ---
+  PASS: edge_1023 (max_err=3.50e-03)
+  PASS: edge_50257 (max_err=3.44e-03)
+  edge_cases: PASS
+
+correctness: PASS
+
+--- Correctness Summary ---
+smoke_test: PASS
+shape_sweep: PASS (21 configs, worst_err=2.78e-02 at gpt2/torch.bfloat16)
+numerical_stability: PASS
+determinism: PASS
+edge_cases: PASS
+correctness: PASS
+
+=== PERFORMANCE (large: batch=4096, vocab=32000, dtype=torch.float16) ===
+
+  Benchmarking: tiny ...
+    kernel: 15.39 us | pytorch: 10.43 us | speedup: 0.678x | 0.002 TFLOPS | 0.1% peak
+
+  Benchmarking: small ...
+    kernel: 16.10 us | pytorch: 24.73 us | speedup: 1.536x | 0.065 TFLOPS | 3.2% peak
+
+  Benchmarking: medium ...
+    kernel: 45.27 us | pytorch: 78.67 us | speedup: 1.738x | 0.371 TFLOPS | 18.1% peak
+
+  Benchmarking: large ...
+    kernel: 543.25 us | pytorch: 2316.93 us | speedup: 4.265x | 0.965 TFLOPS | 47.1% peak
+
+  Benchmarking: xlarge ...
+    kernel: 9855.00 us | pytorch: 4941.60 us | speedup: 0.501x | 0.167 TFLOPS | 8.2% peak
+
+  Benchmarking: llama ...
+    kernel: 541.51 us | pytorch: 2318.27 us | speedup: 4.281x | 0.968 TFLOPS | 47.3% peak
+
+  Benchmarking: gpt2 ...
+    kernel: 4950.98 us | pytorch: 2503.59 us | speedup: 0.506x | 0.166 TFLOPS | 8.1% peak
+
+--- Performance Summary (primary: large) ---
+latency_us: 543.25
+latency_ms: 0.5432
+throughput_tflops: 0.965
+bandwidth_gb_s: 482.6
+pct_peak_compute: 47.1%
+pct_peak_bandwidth: 96.5%
+arithmetic_intensity: 2.00
+ridge_point: 4.10
+bottleneck: memory_bound
+flops: 524288000
+bytes: 262152192
+peak_vram_mb: 1828.1
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 2316.93
+pytorch_latency_ms: 2.3169
+kernel_latency_us: 543.25
+kernel_latency_ms: 0.5432
+speedup_vs_pytorch: 4.265x
+pytorch_tflops: 0.226
+kernel_tflops: 0.965
+
+=== SIZE SWEEP ===
+size            kernel_us   pytorch_us    speedup     tflops    %peak
+------------------------------------------------------------------
+tiny                15.39        10.43     0.678x      0.002     0.1%
+small               16.10        24.73     1.536x      0.065     3.2%
+medium              45.27        78.67     1.738x      0.371    18.1%
+large              543.25      2316.93     4.265x      0.965    47.1%
+xlarge            9855.00      4941.60     0.501x      0.167     8.2%
+llama              541.51      2318.27     4.281x      0.968    47.3%
+gpt2              4950.98      2503.59     0.506x      0.166     8.1%
+
+=== FINAL ===
+kernel_type: cross_entropy
+correctness: PASS
+throughput_tflops: 0.965
+speedup_vs_pytorch: 4.265x
+pct_peak_compute: 47.1%
+bench_time_seconds: 3.3
+
+[exit=0 elapsed=9.3s]
+
+##############################################################################
+# CONFIG: kernel=cross_entropy backend=cuda
+# source=/home/repos/autokernel/kernels/cuda/cross_entropy.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: cross_entropy
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 6.144
+gpu_peak_tflops_bf16: 6.144
+gpu_peak_tflops_fp32: 3.072
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  PASS (max_abs_error=8.163452e-04)
+
+--- Stage 2: Shape Sweep ---
+  PASS: tiny torch.float16 (max_err=8.16e-04, within_tol=100.0%)
+  PASS: tiny torch.bfloat16 (max_err=4.64e-03, within_tol=100.0%)
+  PASS: tiny torch.float32 (max_err=6.39e-05, within_tol=100.0%)
+  PASS: small torch.float16 (max_err=4.65e-04, within_tol=100.0%)
+  PASS: small torch.bfloat16 (max_err=8.25e-03, within_tol=100.0%)
+  PASS: small torch.float32 (max_err=2.34e-05, within_tol=100.0%)
+  PASS: medium torch.float16 (max_err=2.29e-03, within_tol=100.0%)
+  PASS: medium torch.bfloat16 (max_err=5.43e-03, within_tol=100.0%)
+  PASS: medium torch.float32 (max_err=1.91e-06, within_tol=100.0%)
+  PASS: large torch.float16 (max_err=1.49e-03, within_tol=100.0%)
+  PASS: large torch.bfloat16 (max_err=1.50e-03, within_tol=100.0%)
+  PASS: large torch.float32 (max_err=2.86e-06, within_tol=100.0%)
+  PASS: xlarge torch.float16 (max_err=1.25e-03, within_tol=100.0%)
+  PASS: xlarge torch.bfloat16 (max_err=1.69e-02, within_tol=100.0%)
+  PASS: xlarge torch.float32 (max_err=1.91e-06, within_tol=100.0%)
+  PASS: llama torch.float16 (max_err=1.49e-03, within_tol=100.0%)
+  PASS: llama torch.bfloat16 (max_err=1.50e-03, within_tol=100.0%)
+  PASS: llama torch.float32 (max_err=2.86e-06, within_tol=100.0%)
+  PASS: gpt2 torch.float16 (max_err=3.44e-03, within_tol=100.0%)
+  PASS: gpt2 torch.bfloat16 (max_err=2.78e-02, within_tol=100.0%)
+  PASS: gpt2 torch.float32 (max_err=2.86e-06, within_tol=100.0%)
+  shape_sweep: PASS (21 configs, worst_err=2.78e-02)
+
+--- Stage 3: Numerical Stability ---
+  PASS: near_max -> both have NaN/Inf (expected overflow)
+  PASS: near_zero (max_err=1.78e-03)
+  PASS: mixed_scale (max_err=8.99e-01)
+  PASS: all_zeros (max_err=1.78e-03)
+  PASS: all_same (max_err=1.78e-03)
+  numerical_stability: PASS
+
+--- Stage 4: Determinism ---
+  PASS: 3 runs are bitwise identical
+
+--- Stage 5: Edge Cases ---
+  PASS: edge_1023 (max_err=3.50e-03)
+  PASS: edge_50257 (max_err=3.44e-03)
+  edge_cases: PASS
+
+correctness: PASS
+
+--- Correctness Summary ---
+smoke_test: PASS
+shape_sweep: PASS (21 configs, worst_err=2.78e-02 at gpt2/torch.bfloat16)
+numerical_stability: PASS
+determinism: PASS
+edge_cases: PASS
+correctness: PASS
+
+=== PERFORMANCE (large: batch=4096, vocab=32000, dtype=torch.float16) ===
+
+  Benchmarking: tiny ...
+    kernel: 17.09 us | pytorch: 11.89 us | speedup: 0.696x | 0.002 TFLOPS | 0.0% peak
+
+  Benchmarking: small ...
+    kernel: 19.23 us | pytorch: 26.02 us | speedup: 1.353x | 0.055 TFLOPS | 0.9% peak
+
+  Benchmarking: medium ...
+    kernel: 70.34 us | pytorch: 78.76 us | speedup: 1.120x | 0.239 TFLOPS | 3.9% peak
+
+  Benchmarking: large ...
+    kernel: 989.29 us | pytorch: 2318.13 us | speedup: 2.343x | 0.530 TFLOPS | 8.6% peak
+
+  Benchmarking: xlarge ...
+    kernel: 3257.40 us | pytorch: 4946.78 us | speedup: 1.519x | 0.506 TFLOPS | 8.2% peak
+
+  Benchmarking: llama ...
+    kernel: 988.79 us | pytorch: 2317.08 us | speedup: 2.343x | 0.530 TFLOPS | 8.6% peak
+
+  Benchmarking: gpt2 ...
+    kernel: 1699.41 us | pytorch: 2501.25 us | speedup: 1.472x | 0.485 TFLOPS | 7.9% peak
+
+--- Performance Summary (primary: large) ---
+latency_us: 989.29
+latency_ms: 0.9893
+throughput_tflops: 0.530
+bandwidth_gb_s: 265.0
+pct_peak_compute: 8.6%
+pct_peak_bandwidth: 53.0%
+arithmetic_intensity: 2.00
+ridge_point: 12.29
+bottleneck: memory_bound
+flops: 524288000
+bytes: 262152192
+peak_vram_mb: 1828.1
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 2318.13
+pytorch_latency_ms: 2.3181
+kernel_latency_us: 989.29
+kernel_latency_ms: 0.9893
+speedup_vs_pytorch: 2.343x
+pytorch_tflops: 0.226
+kernel_tflops: 0.530
+
+=== SIZE SWEEP ===
+size            kernel_us   pytorch_us    speedup     tflops    %peak
+------------------------------------------------------------------
+tiny                17.09        11.89     0.696x      0.002     0.0%
+small               19.23        26.02     1.353x      0.055     0.9%
+medium              70.34        78.76     1.120x      0.239     3.9%
+large              989.29      2318.13     2.343x      0.530     8.6%
+xlarge            3257.40      4946.78     1.519x      0.506     8.2%
+llama              988.79      2317.08     2.343x      0.530     8.6%
+gpt2              1699.41      2501.25     1.472x      0.485     7.9%
+
+=== FINAL ===
+kernel_type: cross_entropy
+correctness: PASS
+throughput_tflops: 0.530
+speedup_vs_pytorch: 2.343x
+pct_peak_compute: 8.6%
+bench_time_seconds: 2.7
+
+[exit=0 elapsed=8.7s]
+
+##############################################################################
+# CONFIG: kernel=rotary_embedding backend=triton
+# source=/home/repos/autokernel/kernels/rotary_embedding.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: rotary_embedding
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 2.048
+gpu_peak_tflops_bf16: 2.048
+gpu_peak_tflops_fp32: 1.024
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  FAIL: max_abs_error=7.812500e-03 exceeds tol(atol=0.001, rtol=0.001)
+
+correctness: FAIL (smoke test failed, aborting remaining stages)
+
+--- Correctness Summary ---
+smoke_test: FAIL
+shape_sweep: SKIP
+numerical_stability: SKIP
+determinism: SKIP
+edge_cases: SKIP
+correctness: FAIL
+
+=== PERFORMANCE (large: batch=2, heads=32, seq_len=1024, head_dim=128, dtype=torch.float16) ===
+
+  Benchmarking: tiny ...
+    kernel: 10.49 us | pytorch: 42.16 us | speedup: 4.020x | 0.009 TFLOPS | 0.5% peak
+
+  Benchmarking: small ...
+    kernel: 28.26 us | pytorch: 51.91 us | speedup: 1.837x | 0.056 TFLOPS | 2.7% peak
+
+  Benchmarking: medium ...
+    kernel: 64.52 us | pytorch: 85.02 us | speedup: 1.318x | 0.098 TFLOPS | 4.8% peak
+
+  Benchmarking: large ...
+    kernel: 244.97 us | pytorch: 1842.46 us | speedup: 7.521x | 0.205 TFLOPS | 10.0% peak
+
+  Benchmarking: xlarge ...
+    kernel: 479.94 us | pytorch: 4379.37 us | speedup: 9.125x | 0.210 TFLOPS | 10.2% peak
+
+  Benchmarking: llm_7b ...
+    kernel: 248.11 us | pytorch: 1857.29 us | speedup: 7.486x | 0.203 TFLOPS | 9.9% peak
+
+  Benchmarking: llm_13b ...
+    kernel: 306.58 us | pytorch: 2490.89 us | speedup: 8.125x | 0.205 TFLOPS | 10.0% peak
+
+--- Performance Summary (primary: large) ---
+latency_us: 244.97
+latency_ms: 0.2450
+throughput_tflops: 0.205
+bandwidth_gb_s: 138.0
+pct_peak_compute: 10.0%
+pct_peak_bandwidth: 27.6%
+arithmetic_intensity: 1.49
+ridge_point: 4.10
+bottleneck: memory_bound
+flops: 50331648
+bytes: 33816576
+peak_vram_mb: 352.5
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 1842.46
+pytorch_latency_ms: 1.8425
+kernel_latency_us: 244.97
+kernel_latency_ms: 0.2450
+speedup_vs_pytorch: 7.521x
+pytorch_tflops: 0.027
+kernel_tflops: 0.205
+
+=== SIZE SWEEP ===
+size            kernel_us   pytorch_us    speedup     tflops    %peak
+------------------------------------------------------------------
+tiny                10.49        42.16     4.020x      0.009     0.5%
+small               28.26        51.91     1.837x      0.056     2.7%
+medium              64.52        85.02     1.318x      0.098     4.8%
+large              244.97      1842.46     7.521x      0.205    10.0%
+xlarge             479.94      4379.37     9.125x      0.210    10.2%
+llm_7b             248.11      1857.29     7.486x      0.203     9.9%
+llm_13b            306.58      2490.89     8.125x      0.205    10.0%
+
+=== FINAL ===
+kernel_type: rotary_embedding
+correctness: FAIL
+throughput_tflops: 0.205
+speedup_vs_pytorch: 7.521x
+pct_peak_compute: 10.0%
+bench_time_seconds: 3.0
+
+[exit=0 elapsed=8.7s]
+
+##############################################################################
+# CONFIG: kernel=rotary_embedding backend=cuda
+# source=/home/repos/autokernel/kernels/cuda/rotary_embedding.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: rotary_embedding
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 6.144
+gpu_peak_tflops_bf16: 6.144
+gpu_peak_tflops_fp32: 3.072
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  FAIL: max_abs_error=7.812500e-03 exceeds tol(atol=0.001, rtol=0.001)
+
+correctness: FAIL (smoke test failed, aborting remaining stages)
+
+--- Correctness Summary ---
+smoke_test: FAIL
+shape_sweep: SKIP
+numerical_stability: SKIP
+determinism: SKIP
+edge_cases: SKIP
+correctness: FAIL
+
+=== PERFORMANCE (large: batch=2, heads=32, seq_len=1024, head_dim=128, dtype=torch.float16) ===
+
+  Benchmarking: tiny ...
+    kernel: 6.37 us | pytorch: 46.61 us | speedup: 7.316x | 0.015 TFLOPS | 0.3% peak
+
+  Benchmarking: small ...
+    kernel: 8.41 us | pytorch: 69.07 us | speedup: 8.216x | 0.187 TFLOPS | 3.0% peak
+
+  Benchmarking: medium ...
+    kernel: 16.84 us | pytorch: 100.32 us | speedup: 5.957x | 0.374 TFLOPS | 6.1% peak
+
+  Benchmarking: large ...
+    kernel: 88.22 us | pytorch: 1859.49 us | speedup: 21.078x | 0.571 TFLOPS | 9.3% peak
+
+  Benchmarking: xlarge ...
+    kernel: 165.45 us | pytorch: 4381.38 us | speedup: 26.481x | 0.608 TFLOPS | 9.9% peak
+
+  Benchmarking: llm_7b ...
+    kernel: 88.14 us | pytorch: 1857.72 us | speedup: 21.076x | 0.571 TFLOPS | 9.3% peak
+
+  Benchmarking: llm_13b ...
+    kernel: 107.71 us | pytorch: 2489.67 us | speedup: 23.114x | 0.584 TFLOPS | 9.5% peak
+
+--- Performance Summary (primary: large) ---
+latency_us: 88.22
+latency_ms: 0.0882
+throughput_tflops: 0.571
+bandwidth_gb_s: 383.3
+pct_peak_compute: 9.3%
+pct_peak_bandwidth: 76.7%
+arithmetic_intensity: 1.49
+ridge_point: 12.29
+bottleneck: memory_bound
+flops: 50331648
+bytes: 33816576
+peak_vram_mb: 352.5
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 1859.49
+pytorch_latency_ms: 1.8595
+kernel_latency_us: 88.22
+kernel_latency_ms: 0.0882
+speedup_vs_pytorch: 21.078x
+pytorch_tflops: 0.027
+kernel_tflops: 0.571
+
+=== SIZE SWEEP ===
+size            kernel_us   pytorch_us    speedup     tflops    %peak
+------------------------------------------------------------------
+tiny                 6.37        46.61     7.316x      0.015     0.3%
+small                8.41        69.07     8.216x      0.187     3.0%
+medium              16.84       100.32     5.957x      0.374     6.1%
+large               88.22      1859.49    21.078x      0.571     9.3%
+xlarge             165.45      4381.38    26.481x      0.608     9.9%
+llm_7b              88.14      1857.72    21.076x      0.571     9.3%
+llm_13b            107.71      2489.67    23.114x      0.584     9.5%
+
+=== FINAL ===
+kernel_type: rotary_embedding
+correctness: FAIL
+throughput_tflops: 0.571
+speedup_vs_pytorch: 21.078x
+pct_peak_compute: 9.3%
+bench_time_seconds: 2.4
+
+[exit=0 elapsed=8.4s]
+
+##############################################################################
+# CONFIG: kernel=reduce backend=triton
+# source=/home/repos/autokernel/kernels/reduce.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: reduce
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 6.144
+gpu_peak_tflops_bf16: 6.144
+gpu_peak_tflops_fp32: 3.072
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  PASS (max_abs_error=0.000000e+00)
+
+--- Stage 2: Shape Sweep ---
+  PASS: small torch.float16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: small torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: medium torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  PASS: medium torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: large torch.float16 (max_err=3.91e-03, within_tol=100.0%)
+  PASS: large torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: wide torch.float16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: wide torch.bfloat16 (max_err=0.00e+00, within_tol=100.0%)
+  shape_sweep: PASS (8 configs, worst_err=3.91e-03)
+
+--- Stage 3: Numerical Stability ---
+  PASS: near_max -> both have NaN/Inf (expected overflow)
+  PASS: near_zero (max_err=0.00e+00)
+  PASS: mixed_scale -> both have NaN/Inf (expected overflow)
+  PASS: all_zeros (max_err=0.00e+00)
+  PASS: all_same (max_err=0.00e+00)
+  numerical_stability: PASS
+
+--- Stage 4: Determinism ---
+  PASS: 3 runs are bitwise identical
+
+--- Stage 5: Edge Cases ---
+  PASS: edge_1023 (max_err=0.00e+00)
+  PASS: edge_4097 (max_err=3.12e-02)
+  edge_cases: PASS
+
+correctness: PASS
+
+--- Correctness Summary ---
+smoke_test: PASS
+shape_sweep: PASS (8 configs, worst_err=3.91e-03 at large/torch.float16)
+numerical_stability: PASS
+determinism: PASS
+edge_cases: PASS
+correctness: PASS
+
+=== PERFORMANCE (large: M=8192, N=8192, dtype=torch.float16) ===
+
+  Benchmarking: small ...
+    kernel: 16.01 us | pytorch: 27.03 us | speedup: 1.688x | 0.065 TFLOPS | 1.1% peak
+
+  Benchmarking: medium ...
+    kernel: 90.71 us | pytorch: 153.86 us | speedup: 1.696x | 0.185 TFLOPS | 3.0% peak
+
+  Benchmarking: large ...
+    kernel: 243.06 us | pytorch: 401.89 us | speedup: 1.653x | 0.276 TFLOPS | 4.5% peak
+
+  Benchmarking: wide ...
+    kernel: 142.51 us | pytorch: 226.58 us | speedup: 1.590x | 0.235 TFLOPS | 3.8% peak
+
+--- Performance Summary (primary: large) ---
+latency_us: 243.06
+latency_ms: 0.2431
+throughput_tflops: 0.276
+bandwidth_gb_s: 552.3
+pct_peak_compute: 4.5%
+pct_peak_bandwidth: 110.5%
+arithmetic_intensity: 0.50
+ridge_point: 12.29
+bottleneck: memory_bound
+flops: 67108864
+bytes: 134234112
+peak_vram_mb: 384.0
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 401.89
+pytorch_latency_ms: 0.4019
+kernel_latency_us: 243.06
+kernel_latency_ms: 0.2431
+speedup_vs_pytorch: 1.653x
+pytorch_tflops: 0.167
+kernel_tflops: 0.276
+
+=== SIZE SWEEP ===
+size            kernel_us   pytorch_us    speedup     tflops    %peak
+------------------------------------------------------------------
+small               16.01        27.03     1.688x      0.065     1.1%
+medium              90.71       153.86     1.696x      0.185     3.0%
+large              243.06       401.89     1.653x      0.276     4.5%
+wide               142.51       226.58     1.590x      0.235     3.8%
+
+=== FINAL ===
+kernel_type: reduce
+correctness: PASS
+throughput_tflops: 0.276
+speedup_vs_pytorch: 1.653x
+pct_peak_compute: 4.5%
+bench_time_seconds: 2.2
+
+[exit=0 elapsed=8.2s]
+
+##############################################################################
+# CONFIG: kernel=reduce backend=cuda
+# source=/home/repos/autokernel/kernels/cuda/reduce.py
+##############################################################################
+============================================================
+AutoKernel Benchmark Harness
+============================================================
+kernel_type: reduce
+kernel_module: kernel.py loaded successfully
+
+=== GPU INFO ===
+gpu_name: Iluvatar BI-V150
+gpu_sm_count: 16
+gpu_memory_gb: 32.0
+gpu_peak_tflops_fp16: 6.144
+gpu_peak_tflops_bf16: 6.144
+gpu_peak_tflops_fp32: 3.072
+gpu_peak_bandwidth_gb_s: 500.0
+gpu_l2_cache_mb: 16.0
+gpu_compute_capability: 7.1
+
+=== CORRECTNESS ===
+
+--- Stage 1: Smoke Test ---
+  PASS (max_abs_error=0.000000e+00)
+
+--- Stage 2: Shape Sweep ---
+  PASS: small torch.float16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: small torch.bfloat16 (max_err=5.00e-01, within_tol=100.0%)
+  PASS: medium torch.float16 (max_err=1.95e-03, within_tol=100.0%)
+  PASS: medium torch.bfloat16 (max_err=1.00e+00, within_tol=100.0%)
+  PASS: large torch.float16 (max_err=1.53e-05, within_tol=100.0%)
+  PASS: large torch.bfloat16 (max_err=2.00e+00, within_tol=100.0%)
+  PASS: wide torch.float16 (max_err=0.00e+00, within_tol=100.0%)
+  PASS: wide torch.bfloat16 (max_err=2.00e+00, within_tol=100.0%)
+  shape_sweep: PASS (8 configs, worst_err=2.00e+00)
+
+--- Stage 3: Numerical Stability ---
+  PASS: near_max -> both have NaN/Inf (expected overflow)
+  PASS: near_zero (max_err=0.00e+00)
+  PASS: mixed_scale -> both have NaN/Inf (expected overflow)
+  PASS: all_zeros (max_err=0.00e+00)
+  PASS: all_same (max_err=0.00e+00)
+  numerical_stability: PASS
+
+--- Stage 4: Determinism ---
+  PASS: 3 runs are bitwise identical
+
+--- Stage 5: Edge Cases ---
+  PASS: edge_1023 (max_err=0.00e+00)
+  PASS: edge_4097 (max_err=3.12e-02)
+  edge_cases: PASS
+
+correctness: PASS
+
+--- Correctness Summary ---
+smoke_test: PASS
+shape_sweep: PASS (8 configs, worst_err=2.00e+00 at large/torch.bfloat16)
+numerical_stability: PASS
+determinism: PASS
+edge_cases: PASS
+correctness: PASS
+
+=== PERFORMANCE (large: M=8192, N=8192, dtype=torch.float16) ===
+
+  Benchmarking: small ...
+    kernel: 13.49 us | pytorch: 24.12 us | speedup: 1.787x | 0.078 TFLOPS | 1.3% peak
+
+  Benchmarking: medium ...
+    kernel: 118.31 us | pytorch: 151.00 us | speedup: 1.276x | 0.142 TFLOPS | 2.3% peak
+
+  Benchmarking: large ...
+    kernel: 311.98 us | pytorch: 398.74 us | speedup: 1.278x | 0.215 TFLOPS | 3.5% peak
+
+  Benchmarking: wide ...
+    kernel: 213.07 us | pytorch: 223.65 us | speedup: 1.050x | 0.157 TFLOPS | 2.6% peak
+
+--- Performance Summary (primary: large) ---
+latency_us: 311.98
+latency_ms: 0.3120
+throughput_tflops: 0.215
+bandwidth_gb_s: 430.3
+pct_peak_compute: 3.5%
+pct_peak_bandwidth: 86.1%
+arithmetic_intensity: 0.50
+ridge_point: 12.29
+bottleneck: memory_bound
+flops: 67108864
+bytes: 134234112
+peak_vram_mb: 384.0
+
+=== COMPARISON VS PYTORCH ===
+pytorch_latency_us: 398.74
+pytorch_latency_ms: 0.3987
+kernel_latency_us: 311.98
+kernel_latency_ms: 0.3120
+speedup_vs_pytorch: 1.278x
+pytorch_tflops: 0.168
+kernel_tflops: 0.215
+
+=== SIZE SWEEP ===
+size            kernel_us   pytorch_us    speedup     tflops    %peak
+------------------------------------------------------------------
+small               13.49        24.12     1.787x      0.078     1.3%
+medium             118.31       151.00     1.276x      0.142     2.3%
+large              311.98       398.74     1.278x      0.215     3.5%
+wide               213.07       223.65     1.050x      0.157     2.6%
+
+=== FINAL ===
+kernel_type: reduce
+correctness: PASS
+throughput_tflops: 0.215
+speedup_vs_pytorch: 1.278x
+pct_peak_compute: 3.5%
+bench_time_seconds: 1.7
+
+[exit=0 elapsed=8.5s]

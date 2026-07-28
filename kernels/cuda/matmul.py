@@ -17,6 +17,14 @@ The agent can change anything in this file:
   - Memory layout, swizzling, prefetch strategy
   - Accumulation precision, epilogue fusion
   - Any CUDA intrinsic or PTX instruction
+
+CoreX (ivcore11) port note (non-invasive):
+  Iluvatar ivcore11 does not provide the NVIDIA __half 16x16x16 wmma fragment
+  used by the tensor-core path.  Rather than replacing that path, a portable
+  shared-memory tiled GEMM variant is added behind ``#if defined(AUTOKERNEL_COREX)``
+  (the macro is only set by kernels/cuda/_compile.py when the CoreX toolchain is
+  detected).  On stock NVIDIA/nvcc the macro is undefined, so the original
+  nvcuda::wmma kernel in the ``#else`` branch compiles byte-for-byte unchanged.
 """
 
 KERNEL_TYPE = "matmul"
@@ -29,6 +37,55 @@ CUDA_SRC = r"""
 #include <torch/extension.h>
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
+
+#if defined(AUTOKERNEL_COREX)
+// =========================================================================
+// CoreX (ivcore11) variant: portable shared-memory tiled GEMM.
+// ixix::wmma lacks the __half 16x16x16 fragment used by the NVIDIA tensor-core
+// path (see #else), so on CoreX we select this portable tiled GEMM
+// (fp16 in/out, fp32 accumulation).  Same launcher signature / semantics.
+// =========================================================================
+constexpr int TILE = 16;
+
+__global__ void matmul_kernel_tiled(
+    const half* __restrict__ A,
+    const half* __restrict__ B,
+    half* __restrict__ C,
+    int M, int N, int K
+) {
+    __shared__ half As[TILE][TILE];
+    __shared__ half Bs[TILE][TILE];
+
+    const int row = blockIdx.y * TILE + threadIdx.y;
+    const int col = blockIdx.x * TILE + threadIdx.x;
+
+    float acc = 0.0f;
+
+    const int k_tiles = (K + TILE - 1) / TILE;
+    for (int kt = 0; kt < k_tiles; ++kt) {
+        const int a_col = kt * TILE + threadIdx.x;
+        const int b_row = kt * TILE + threadIdx.y;
+
+        As[threadIdx.y][threadIdx.x] =
+            (row < M && a_col < K) ? A[row * K + a_col] : __float2half(0.0f);
+        Bs[threadIdx.y][threadIdx.x] =
+            (b_row < K && col < N) ? B[b_row * N + col] : __float2half(0.0f);
+
+        __syncthreads();
+
+        #pragma unroll
+        for (int k = 0; k < TILE; ++k) {
+            acc += __half2float(As[threadIdx.y][k]) * __half2float(Bs[k][threadIdx.x]);
+        }
+        __syncthreads();
+    }
+
+    if (row < M && col < N) {
+        C[row * N + col] = __float2half(acc);
+    }
+}
+
+#else
 #include <mma.h>
 
 using namespace nvcuda;
@@ -207,6 +264,8 @@ matmul_kernel_wmma(
     }
 }
 
+#endif  // AUTOKERNEL_COREX
+
 torch::Tensor matmul_cuda(torch::Tensor A, torch::Tensor B) {
     TORCH_CHECK(A.is_cuda(), "A must be a CUDA tensor");
     TORCH_CHECK(B.is_cuda(), "B must be a CUDA tensor");
@@ -219,6 +278,17 @@ torch::Tensor matmul_cuda(torch::Tensor A, torch::Tensor B) {
 
     auto C = torch::empty({M, N}, A.options());
 
+#if defined(AUTOKERNEL_COREX)
+    dim3 block(TILE, TILE);
+    dim3 grid((N + TILE - 1) / TILE, (M + TILE - 1) / TILE);
+
+    matmul_kernel_tiled<<<grid, block>>>(
+        reinterpret_cast<const half*>(A.data_ptr<at::Half>()),
+        reinterpret_cast<const half*>(B.data_ptr<at::Half>()),
+        reinterpret_cast<half*>(C.data_ptr<at::Half>()),
+        M, N, K
+    );
+#else
     dim3 grid((M + BLOCK_M - 1) / BLOCK_M, (N + BLOCK_N - 1) / BLOCK_N);
     dim3 block(256);  // 8 warps
 
@@ -228,6 +298,7 @@ torch::Tensor matmul_cuda(torch::Tensor A, torch::Tensor B) {
         reinterpret_cast<half*>(C.data_ptr<at::Half>()),
         M, N, K
     );
+#endif
 
     return C;
 }

@@ -1,0 +1,14 @@
+{
+  "source_commit": "78435821cc3d5756ba6ee1785c397f6d8fa8c90d",
+  "branch": "corex-port-guarded",
+  "modified": [
+    "kernels/cuda/_compile.py",
+    "kernels/cuda/matmul.py",
+    "kernels/cuda/rmsnorm.py",
+    "kernels/cuda/rotary_embedding.py",
+    "kernels/cuda/softmax.py",
+    "kernels/fused_mlp.py"
+  ],
+  "guard_mechanism": "编译期宏 AUTOKERNEL_COREX(由 _compile.py 检测 CoreX 后经 -D 下发)+ _is_corex() 运行时/环境探测 + Triton hasattr(tl.math,'tanh') 能力探测",
+  "note": "所有 CoreX 专用改动均在守卫内;默认(非 CoreX)编译走原 nvcuda::wmma / nvcc flag / half2 向量化 softmax 路径。"
+}

@@ -29,6 +29,7 @@ CUDA_SRC = r"""
 #include <torch/extension.h>
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
+#include <algorithm>
 
 // One block per row. Each thread handles multiple elements along N.
 // Reduction: warp shuffle + shared memory across warps.
@@ -142,7 +143,7 @@ torch::Tensor rmsnorm_cuda(torch::Tensor x, torch::Tensor weight) {
 
     // Choose block size: enough threads to cover N with vectorized loads
     // Each thread handles 2 elements, so we need N/2 threads minimum, up to 1024
-    int threads = min(1024, max(32, ((N + 1) / 2 + 31) / 32 * 32));
+    int threads = std::min(1024, std::max(32, ((N + 1) / 2 + 31) / 32 * 32));
 
     dim3 grid(M);
     dim3 block(threads);

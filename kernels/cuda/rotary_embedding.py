@@ -23,6 +23,7 @@ CUDA_SRC = r"""
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
 #include <math.h>
+#include <algorithm>
 
 constexpr int BLOCK_SIZE = 256;
 constexpr float BASE_FREQ = 10000.0f;
@@ -111,7 +112,7 @@ torch::Tensor rotary_embedding_cuda(torch::Tensor x, torch::Tensor cos_cache, to
 
     int total = B * H * N * (D / 2);
     int blocks = (total + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    blocks = min(blocks, 65535);
+    blocks = std::min(blocks, 65535);
 
     rotary_embedding_kernel<<<blocks, BLOCK_SIZE>>>(
         reinterpret_cast<const half*>(x.data_ptr<at::Half>()),
@@ -131,7 +132,7 @@ std::vector<torch::Tensor> precompute_freqs_cuda(int N, int D, torch::Device dev
 
     int total = N * (D / 2);
     int blocks = (total + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    blocks = min(blocks, 65535);
+    blocks = std::min(blocks, 65535);
 
     precompute_freqs_kernel<<<blocks, BLOCK_SIZE>>>(
         reinterpret_cast<half*>(cos_cache.data_ptr<at::Half>()),

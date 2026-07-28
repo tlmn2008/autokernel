@@ -1,0 +1,47 @@
+{
+  "suite": "bench.py 5-stage correctness harness (smoke/shape_sweep/numerical_stability/determinism/edge_cases), full mode, vs reference.py PyTorch oracle",
+  "scope": "完整运行时正确性测试面 = 9 种 kernel × 2 后端(triton/cuda)= 18 个 (kernel,backend) 组合;每组合以 bench.py 最终 correctness 判定计为 1 个运行时测试用例。dtype 覆盖 fp16/bf16/fp32(仓库不使用 fp64)。本次为 corex-port-guarded(非侵入式条件保护)分支在 CoreX ivcore11 上的重跑,结果与就地替换版完全一致。",
+  "run_command": "PYTHONPATH=. python3 corex_port/prewarm.py && python3 corex_port/run_suite.py all all",
+  "branch": "corex-port-guarded",
+  "counting_note": "计数粒度为 (kernel × backend) 组合(harness 的 correctness 聚合判定)。HANG(看门狗超时)按契约计入 failed,不剔除。tests_run = passed 7 + failed 11 + skipped 0 = 18。逐阶段明细见下方 stage_breakdown 与 test.log。守卫版 matmul/cuda 走 tiled GEMM 变体(#if defined(AUTOKERNEL_COREX)),softmax/cuda 走奇数列标量守卫路径,其余同上游。",
+  "tests_run": 18,
+  "tests_passed": 7,
+  "tests_failed": 11,
+  "tests_skipped": 0,
+  "passed_configs": [
+    "matmul/triton", "softmax/triton", "softmax/cuda",
+    "cross_entropy/triton", "cross_entropy/cuda", "reduce/triton", "reduce/cuda"
+  ],
+  "failed_configs": [
+    {"config": "matmul/cuda", "failing_stage": "shape_sweep(fp32)", "cause": "kernel_fn 强制 fp16 计算(守卫版 CoreX 走 tiled GEMM 变体,fp16 输入/fp32 累加/fp16 输出,与原 WMMA 语义一致),fp32 用例误差~1e-2 超 1e-4 容差;平台无关,NVIDIA(wmma 路径)同样以 fp16 计算亦不过"},
+    {"config": "layernorm/triton", "failing_stage": "shape_sweep(bf16)", "cause": "bf16 精度:误差~8e-3~1.6e-2,超 atol/rtol=2e-3;bf16 1-ulp 已>容差,平台无关"},
+    {"config": "layernorm/cuda", "failing_stage": "shape_sweep(bf16+fp32)+edge_cases", "cause": "bf16 同上;fp32 一遍法方差算法误差~1.7e-3 超 1e-5,算法精度问题,平台无关(去 -ffast-math 后无改善)"},
+    {"config": "rmsnorm/triton", "failing_stage": "numerical_stability(mixed_scale)", "cause": "对抗输入(随机×1e3/1e-3)误差~1.6e4;triton 与 cuda 结果完全一致,平台无关"},
+    {"config": "rmsnorm/cuda", "failing_stage": "numerical_stability(mixed_scale)", "cause": "同 triton,两后端一致,平台无关"},
+    {"config": "flash_attention/triton", "failing_stage": "numerical_stability(mixed_scale)", "cause": "对抗输入下 attention 产生 NaN;两后端一致,平台无关"},
+    {"config": "flash_attention/cuda", "failing_stage": "numerical_stability(mixed_scale)", "cause": "同 triton,两后端一致,平台无关"},
+    {"config": "fused_mlp/triton", "failing_stage": "shape_sweep(bf16)", "cause": "bf16 GELU 精度:误差~6.25e-2 超 2e-2;平台无关(tl.math.tanh 缺失已修复,编译/其余尺寸通过)"},
+    {"config": "fused_mlp/cuda", "failing_stage": "HANG(watchdog 420s)", "cause": "朴素单线程/输出元素 kernel 在 LLM 大尺寸(N=11008,K=4096)极慢;harness 的 SIGALRM 无法中断在飞 GPU kernel,累积致进程挂起;按契约计 failed/hung"},
+    {"config": "rotary_embedding/triton", "failing_stage": "smoke(fp16)", "cause": "fp16 容差 1e-3 过紧(cos/sin 为 randn),误差~7.8e-3;两后端一致,平台无关"},
+    {"config": "rotary_embedding/cuda", "failing_stage": "smoke(fp16)", "cause": "同 triton,两后端一致,平台无关"}
+  ],
+  "stage_breakdown": {
+    "note": "18 组合 × 5 阶段的逐阶段判定汇总(不作为主计数,仅供参考,展示编译+运行层面迁移已基本成功)。rotary 两组合 smoke 失败后中止,4 阶段为中止式 SKIP;fused_mlp/cuda 整体 HANG。",
+    "stage_pass": 62,
+    "stage_fail": 14,
+    "stage_skip_aborted": 8,
+    "stage_hang": 5,
+    "total_stage_slots": 90
+  },
+  "metrics": [
+    {"name": "config_pass_rate", "metric_type": "pass_rate", "value": 0.389, "unit": "ratio", "reference": "reference.py PyTorch oracle", "source": "run_suite.py (18 kernel×backend, full 5-stage)"},
+    {"name": "compile_success_rate", "metric_type": "pass_rate", "value": 1.0, "unit": "ratio", "config": "18/18 configs compile+load on ivcore11", "source": "prewarm.py + load_inline"},
+    {"name": "matmul_triton_throughput", "metric_type": "throughput", "value": 21.153, "unit": "TFLOPS", "device": "Iluvatar BI-V150", "config": "large 2048^3 fp16", "source": "bench.py"},
+    {"name": "matmul_triton_speedup", "metric_type": "other", "value": 0.226, "unit": "x_vs_pytorch", "reference": "torch.matmul (cuBLAS/ixblas)", "source": "bench.py"},
+    {"name": "fused_mlp_triton_throughput", "metric_type": "throughput", "value": 30.155, "unit": "TFLOPS", "device": "Iluvatar BI-V150", "config": "large fp16", "source": "bench.py"},
+    {"name": "flash_attention_triton_throughput", "metric_type": "throughput", "value": 6.18, "unit": "TFLOPS", "device": "Iluvatar BI-V150", "config": "large fp16", "source": "bench.py"},
+    {"name": "cross_entropy_triton_speedup", "metric_type": "other", "value": 4.265, "unit": "x_vs_pytorch", "reference": "F.cross_entropy", "source": "bench.py"},
+    {"name": "reduce_triton_throughput", "metric_type": "throughput", "value": 0.277, "unit": "TFLOPS", "device": "Iluvatar BI-V150", "config": "large fp16", "source": "bench.py"},
+    {"name": "softmax_triton_speedup", "metric_type": "other", "value": 1.652, "unit": "x_vs_pytorch", "reference": "F.softmax", "source": "bench.py"}
+  ]
+}
