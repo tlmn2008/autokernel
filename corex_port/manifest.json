@@ -54,10 +54,12 @@
     "default_branch": "corex-port",
     "default_branch_status": "success",
     "compare_url": "https://github.com/RightNow-AI/autokernel/compare/main...tlmn2008:corex-port-guarded",
-    "push_commit": "973b3ecef262584d0bfab26bf9f2b87ca79ad3c4",
-    "push_status": "pending",
-    "pushed_at": "2026-07-27T22:25:00+08:00",
-    "guarded_note": "corex-port-guarded 为非破坏性新分支,从 source_commit 起步以条件保护重放改动;不 force-push 覆盖 corex-port。"
+    "push_commit": "5fd6cd1cdd0d4e910a9cf45b77c37ba8f91f81bc",
+    "prior_push_commit": "973b3ecef262584d0bfab26bf9f2b87ca79ad3c4",
+    "push_status": "success",
+    "pushed_at": "2026-07-28T16:25:00+08:00",
+    "guarded_branch_url": "https://github.com/tlmn2008/autokernel/tree/corex-port-guarded",
+    "guarded_note": "corex-port-guarded 为非破坏性新分支,从 source_commit 起步以条件保护重放改动;不 force-push 覆盖 corex-port。default_branch 保持 corex-port 不变。"
   },
   "local_logs": {
     "compile_log": "corex_port/build/compile.log",
