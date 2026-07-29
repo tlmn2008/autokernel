@@ -5,145 +5,173 @@
   "blockers": [
     {
       "id": "nvcc-flags-rejected-by-clang",
-      "title": "nvcc 专用编译 flag 被 CoreX clang++ 拒绝",
       "symptom": "load_inline 走 CoreX clang++ 时, --use_fast_math / --expt-relaxed-constexpr / -lineinfo / -gencode=arch=compute_XX,code=sm_XX 报 unknown argument, 设备端 JIT 编译失败。",
-      "category": "flag_translation",
-      "phase": "device-jit",
       "classification": "workaround-able",
       "resolved": true,
+      "category": "flag_translation",
+      "phase": "device-jit",
       "file": "kernels/cuda/_compile.py",
+      "final_verdict": "repo-local 修改 _compile.py 即可, 18/18 配置均能编译加载。",
       "error_snippet": "clang: error: unknown argument: '--use_fast_math' / '--expt-relaxed-constexpr' / unsupported '-gencode'",
       "evidence": "裸探针: 对单个 .cu 用 clang++ -x ivcore --cuda-gpu-arch=ivcore11 编译, 携带 nvcc flag 即失败, 去除后成功。",
       "root_cause": "nvcc 与 CoreX clang 前端 flag 集合不同; SM 架构由 --cuda-gpu-arch=ivcore11 固定, -gencode 无意义。",
       "attempts": [
-        {"action": "新增 _is_corex() 检测, 在 CoreX 下从 _DEFAULT_CUDA_FLAGS 移除/翻译 nvcc 专用 flag, _get_arch_flags() 对 CoreX 返回空, 追加 -x ivcore。", "result": "resolved"}
-      ],
-      "final_verdict": "repo-local 修改 _compile.py 即可, 18/18 配置均能编译加载。"
+        {
+          "action": "新增 _is_corex() 检测, 在 CoreX 下从 _DEFAULT_CUDA_FLAGS 移除/翻译 nvcc 专用 flag, _get_arch_flags() 对 CoreX 返回空, 追加 -x ivcore。",
+          "result": "resolved"
+        }
+      ]
     },
     {
       "id": "wmma-half-16x16x16-unsupported",
-      "title": "matmul/cuda 的 nvcuda::wmma 16x16x16 half 片段不被 ixix::wmma 支持",
       "symptom": "matmul/cuda 原实现用 nvcuda::wmma 16x16x16 half fragment, CoreX 上模板实例化失败, 无法编译。",
-      "category": "api_compat",
-      "phase": "device-jit",
       "classification": "workaround-able",
       "resolved": true,
+      "category": "api_compat",
+      "phase": "device-jit",
       "file": "kernels/cuda/matmul.py",
+      "final_verdict": "portable tiled GEMM 在任意 CUDA 兼容 GPU 均可编译运行; matmul/cuda 编译通过并可运行。",
       "error_snippet": "no matching function / unsupported wmma fragment shape for ixix::wmma",
       "evidence": "对照 iluvatar-cuda-base 已知 wmma 片段形状差异; 编译期实例化报错。",
       "root_cause": "ivcore11 的 ixix::wmma 支持的 fragment 形状/数据类型与 NVIDIA Tensor Core 不同。",
       "attempts": [
-        {"action": "放弃 wmma, 改写为可移植的 shared-memory tiled GEMM (fp16 输入 / fp32 累加 / fp16 输出), 不依赖特定 tensor core 片段。", "result": "resolved"}
+        {
+          "action": "放弃 wmma, 改写为可移植的 shared-memory tiled GEMM (fp16 输入 / fp32 累加 / fp16 输出), 不依赖特定 tensor core 片段。",
+          "result": "resolved"
+        }
       ],
-      "final_verdict": "portable tiled GEMM 在任意 CUDA 兼容 GPU 均可编译运行; matmul/cuda 编译通过并可运行。",
       "ref": "iluvatar-cuda-base: wmma fragment shape 差异"
     },
     {
       "id": "host-min-max-not-in-global-namespace",
-      "title": "宿主 launcher 中裸 min()/max() 在 CoreX clang++ 无法解析",
       "symptom": "softmax/rmsnorm/rotary_embedding 的 host 端 launcher 使用裸 min()/max(), CoreX clang++ 对 int 类型不在全局命名空间解析, 编译报错。",
-      "category": "compiler",
-      "phase": "host-build",
       "classification": "workaround-able",
       "resolved": true,
+      "category": "compiler",
+      "phase": "host-build",
       "file": "kernels/cuda/softmax.py, kernels/cuda/rmsnorm.py, kernels/cuda/rotary_embedding.py",
+      "final_verdict": "std:: 限定后三个 kernel 均编译通过。",
       "error_snippet": "error: use of undeclared identifier 'min' / 'max'",
       "evidence": "nvcc 隐式提供全局 min/max, CoreX clang++ 不提供; 补 std:: 后编译通过。",
       "root_cause": "nvcc 与 clang 对 <algorithm> 全局注入行为不同。",
       "attempts": [
-        {"action": "各文件 #include <algorithm>, 将裸 min/max 替换为 std::min/std::max。", "result": "resolved"}
-      ],
-      "final_verdict": "std:: 限定后三个 kernel 均编译通过。"
+        {
+          "action": "各文件 #include <algorithm>, 将裸 min/max 替换为 std::min/std::max。",
+          "result": "resolved"
+        }
+      ]
     },
     {
       "id": "triton-tl-math-tanh-missing",
-      "title": "Triton 3.2 (CoreX) 缺少 tl.math.tanh",
       "symptom": "fused_mlp/triton 的 GELU 近似调用 tl.math.tanh, 在 CoreX 的 Triton 3.2 下不存在, 触发编译/运行崩溃。",
-      "category": "api_compat",
-      "phase": "device-jit / runtime",
       "classification": "workaround-able",
       "resolved": true,
+      "category": "api_compat",
+      "phase": "device-jit / runtime",
       "file": "kernels/fused_mlp.py",
+      "final_verdict": "恒等式替换后功能等价, 编译运行正常。",
       "error_snippet": "AttributeError/compile error: module 'triton.language.math' has no attribute 'tanh'",
       "evidence": "去除 tl.math.tanh 改用 sigmoid 恒等式后, fused_mlp/triton 编译并运行通过(除 bf16 精度外)。",
       "root_cause": "CoreX 版 Triton language.math 未暴露 tanh。",
       "attempts": [
-        {"action": "用数学恒等式 tanh(z)=2*sigmoid(2z)-1 (tl.sigmoid) 替换 tl.math.tanh。", "result": "resolved"}
-      ],
-      "final_verdict": "恒等式替换后功能等价, 编译运行正常。"
+        {
+          "action": "用数学恒等式 tanh(z)=2*sigmoid(2z)-1 (tl.sigmoid) 替换 tl.math.tanh。",
+          "result": "resolved"
+        }
+      ]
     },
     {
       "id": "softmax-misaligned-half2-oddcols",
-      "title": "softmax/cuda fp16 half2 向量化在奇数列上因非对齐访问静默出错(NaN)",
       "symptom": "softmax/cuda fp16 kernel 用 half2 向量化, 当 n_cols 为奇数时产生非对齐 32-bit load, CoreX ivcore11 静默返回损坏值, 传播为 NaN。",
-      "category": "memory_model",
-      "phase": "runtime",
       "classification": "workaround-able",
       "resolved": true,
+      "category": "memory_model",
+      "phase": "runtime",
       "file": "kernels/cuda/softmax.py",
+      "final_verdict": "标量 fallback 后 softmax/cuda 全阶段通过(PASS)。",
       "error_snippet": "correctness NaN on odd n_cols (misaligned half2 32-bit load)",
       "evidence": "对齐列数正常、奇数列 NaN; 与 iluvatar-cuda-base 非对齐 uint32 静默错误案例一致。改标量路径后通过。",
       "root_cause": "ivcore11 对非自然对齐的 32-bit 访问不报错而返回损坏数据。",
       "attempts": [
-        {"action": "在 fp16 kernel 中对奇数 n_cols 加标量 half fallback 路径, 避免非对齐 half2 读取。", "result": "resolved"}
+        {
+          "action": "在 fp16 kernel 中对奇数 n_cols 加标量 half fallback 路径, 避免非对齐 half2 读取。",
+          "result": "resolved"
+        }
       ],
-      "final_verdict": "标量 fallback 后 softmax/cuda 全阶段通过(PASS)。",
       "ref": "iluvatar-cuda-base: 非对齐 32-bit 访问静默错误"
     },
     {
       "id": "cold-jit-exceeds-smoke-timeout",
-      "title": "CUDA kernel 冷 JIT 编译 ~34s 超过 bench.py smoke 阶段 30s 看门狗",
       "symptom": "首次运行 CUDA 后端时, load_inline 冷编译耗时 ~34s, 超过 bench.py smoke 阶段的 _Timeout(30), 造成假 TIMEOUT 失败。",
-      "category": "test_infra",
-      "phase": "device-jit",
       "classification": "workaround-able",
       "resolved": true,
+      "category": "test_infra",
+      "phase": "device-jit",
       "file": "corex_port/prewarm.py",
+      "final_verdict": "预热后 CUDA 配置不再因编译耗时误判; 属测试基建适配, 非平台阻塞。",
       "error_snippet": "smoke stage TIMEOUT (30s) while cold JIT compiling",
       "evidence": "预热编译一次(缓存 .so 到 ~/.cache/autokernel/cuda_build)后重跑, smoke 秒过, 证明是编译耗时而非 kernel 缺陷。",
       "root_cause": "首次 JIT 编译时间计入了 harness 的运行超时。",
       "attempts": [
-        {"action": "新增 corex_port/prewarm.py, 正式计分前预编译全部 CUDA kernel, 使后续运行加载已缓存二进制。", "result": "resolved"}
-      ],
-      "final_verdict": "预热后 CUDA 配置不再因编译耗时误判; 属测试基建适配, 非平台阻塞。"
+        {
+          "action": "新增 corex_port/prewarm.py, 正式计分前预编译全部 CUDA kernel, 使后续运行加载已缓存二进制。",
+          "result": "resolved"
+        }
+      ]
     },
     {
       "id": "fused-mlp-cuda-naive-kernel-hang",
-      "title": "fused_mlp/cuda 朴素 kernel 在 LLM 大尺寸下极慢导致进程挂起",
       "symptom": "fused_mlp/cuda 朴素(单线程/输出元素)kernel 在 N=11008,K=4096 大尺寸下极慢; bench.py 的 SIGALRM 无法中断在飞 GPU kernel, 累积致进程挂起, 触发 420s 看门狗。",
-      "category": "runtime",
-      "phase": "runtime",
       "classification": "workaround-able",
       "resolved": false,
+      "category": "runtime",
+      "phase": "runtime",
       "file": "kernels/cuda/fused_mlp.py",
+      "final_verdict": "按契约挂起计为 failed/hung。根因是上游朴素 kernel 效率, 非 CoreX 迁移阻塞。",
       "error_snippet": "watchdog 420s HANG; SIGALRM cannot preempt in-flight GPU kernel",
       "evidence": "小尺寸阶段可运行, 仅大尺寸挂起; 属算力/kernel 效率问题, 非编译或 API 阻塞。",
       "root_cause": "上游 CUDA 实现为朴素低效 kernel, 在大 GEMM 尺寸上耗时远超看门狗; 与 CoreX 无关(NVIDIA 上同样低效)。",
       "attempts": [
-        {"action": "确认编译通过且小尺寸可运行, 定位为 kernel 算法效率问题; 高效化需重写为 tiled/tensor-core GEMM, 超出编译级迁移范围, 未改写。", "result": "failed"}
+        {
+          "action": "确认编译通过且小尺寸可运行, 定位为 kernel 算法效率问题; 高效化需重写为 tiled/tensor-core GEMM, 超出编译级迁移范围, 未改写。",
+          "result": "failed"
+        }
       ],
-      "final_verdict": "按契约挂起计为 failed/hung。根因是上游朴素 kernel 效率, 非 CoreX 迁移阻塞。",
       "runtime_test_impact": "导致 fused_mlp/cuda 1 个 (kernel,backend) 组合计为 failed(HANG)。",
-      "affected_tests": ["fused_mlp/cuda"]
+      "affected_tests": [
+        "fused_mlp/cuda"
+      ]
     },
     {
       "id": "platform-independent-precision-tolerance-failures",
-      "title": "多个用例因上游 kernel 数值精度/容差(与平台无关)未过",
       "symptom": "matmul/cuda(fp32 强制 fp16 计算)、layernorm(bf16/fp32 一遍法方差)、rmsnorm(对抗 mixed_scale)、flash_attention(对抗输入 NaN)、fused_mlp(bf16 GELU)、rotary_embedding(fp16 1e-3 过紧)等用例误差超容差。",
-      "category": "other",
-      "phase": "runtime",
       "classification": "workaround-able",
       "resolved": false,
-      "file": null,
+      "category": "other",
+      "phase": "runtime",
+      "final_verdict": "非 CoreX 迁移阻塞; 编译与运行均成功, 仅数值/容差判定未过, 属上游 kernel 特性。如实计入 failed。",
       "error_snippet": "correctness diff exceeds atol/rtol (bf16 1-ulp>tol / fp16 tol too tight / adversarial mixed_scale)",
       "evidence": "关键证据: 每个此类用例 triton 与 cuda 两后端结果完全一致, 说明是上游算法/harness 容差特性, 而非 CoreX 后端差异; 同样输入在 NVIDIA 上亦不过。",
       "root_cause": "上游 kernel 的算法精度(一遍法方差/fp16 downcast)与 harness 固定容差、对抗输入设计, 与 CoreX 迁移无关。",
       "attempts": [
-        {"action": "去除 -ffast-math 验证 layernorm/cuda fp32 无改善; 对比两后端一致性确认非平台差异; 未修改上游 kernel 数值逻辑(改动会偏离上游语义, 不属迁移范畴)。", "result": "failed"}
+        {
+          "action": "去除 -ffast-math 验证 layernorm/cuda fp32 无改善; 对比两后端一致性确认非平台差异; 未修改上游 kernel 数值逻辑(改动会偏离上游语义, 不属迁移范畴)。",
+          "result": "failed"
+        }
       ],
-      "final_verdict": "非 CoreX 迁移阻塞; 编译与运行均成功, 仅数值/容差判定未过, 属上游 kernel 特性。如实计入 failed。",
       "runtime_test_impact": "对应 10 个 (kernel,backend) 组合计为 failed。",
-      "affected_tests": ["matmul/cuda", "layernorm/triton", "layernorm/cuda", "rmsnorm/triton", "rmsnorm/cuda", "flash_attention/triton", "flash_attention/cuda", "fused_mlp/triton", "rotary_embedding/triton", "rotary_embedding/cuda"]
+      "affected_tests": [
+        "matmul/cuda",
+        "layernorm/triton",
+        "layernorm/cuda",
+        "rmsnorm/triton",
+        "rmsnorm/cuda",
+        "flash_attention/triton",
+        "flash_attention/cuda",
+        "fused_mlp/triton",
+        "rotary_embedding/triton",
+        "rotary_embedding/cuda"
+      ]
     }
   ]
 }
