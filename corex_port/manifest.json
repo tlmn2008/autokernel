@@ -25,15 +25,6 @@
     "kernels/fused_mlp.py:Triton 3.2 缺 tl.math.tanh —— 以 _HAS_TL_TANH=hasattr(tl.math,'tanh') 能力探测守卫:有则用原 tl.math.tanh,无则用恒等式 tanh(z)=2*sigmoid(2z)-1(条件保护,NVIDIA 保留原生 intrinsic)",
     "corex_port/prewarm.py:预热 JIT 编译,规避冷编译 ~34s 超过 bench.py smoke 阶段 30s 看门狗的假 TIMEOUT;corex_port/run_suite.py 编排 18 组合并用 ixsmi -r 清残留;corex_port/test/test_guard_noninvasive.py 走查证明默认路径保持上游原样"
   ],
-  "terminal_blockers": [],
-  "workaround_blockers": [
-    "nvcc 专用编译 flag 被 CoreX clang++ 拒绝 → _compile.py 按 _is_corex() 条件翻译(已解决,守卫;非 CoreX 原样)",
-    "matmul/cuda 的 nvcuda::wmma 16x16x16 half 片段不被 ixix::wmma 支持 → CoreX 变体用可移植 tiled GEMM,置 #if defined(AUTOKERNEL_COREX) 守卫内,原 wmma 保留在 #else(已解决,守卫)",
-    "宿主 launcher 裸 min()/max() 在 CoreX clang++ 无法解析 → std:: 限定(已解决,无条件 bugfix)",
-    "Triton 3.2 缺 tl.math.tanh → hasattr 能力探测守卫,缺失时用 sigmoid 恒等式(已解决,守卫;有 tanh 平台保留原生)",
-    "softmax/cuda fp16 half2 在奇数列因非对齐访问静默出错(NaN) → 奇数列标量 fallback,置 #if defined(AUTOKERNEL_COREX) 守卫内,NVIDIA 默认仍走 half2(已解决,守卫)",
-    "CUDA kernel 冷 JIT 编译 ~34s 超过 bench.py smoke 30s 看门狗 → prewarm 预热(已解决,测试基建)"
-  ],
   "upstream_assessment": {
     "upstream_status": "ready",
     "notes": "corex-port-guarded 分支已把全部 CoreX 改动重构为非侵入式条件保护,默认(非 CoreX)路径 byte-for-byte 保持上游原样,可直接回上游 PR:(1) _compile.py 的 nvcc→clang flag 翻译由 _is_corex()/_default_cuda_flags(is_corex) 守卫,非 CoreX 原样下发 --use_fast_math/-lineinfo/--expt-relaxed-constexpr/-gencode;(2) matmul.py 的可移植 tiled GEMM 置于 #if defined(AUTOKERNEL_COREX) 内,原 nvcuda::wmma 张量核路径完整保留在 #else,NVIDIA 仍走 wmma 不回归;(3) softmax.py 奇数列标量 fallback 同样以 AUTOKERNEL_COREX 守卫,NVIDIA 默认仍走 half2 向量化(不降性能);(4) fused_mlp.py 以 hasattr(tl.math,'tanh') 能力探测守卫,有 tanh 的平台保留原生 intrinsic。守卫宏由 _compile.py 探测 CoreX 后经 -DAUTOKERNEL_COREX=1 下发。非侵入性验证:corex_port/test/test_guard_noninvasive.py 用 clang++ -E 预处理走查证明未定义宏时选中 wmma/half2 原路径、且不含 CoreX 变体,并单测 _default_cuda_flags/_get_arch_flags 的 NVIDIA 分支下发原 nvcc/-gencode flag(全部 [OK])。本环境无 NVIDIA 卡,NVIDIA 运行时回归仅到走查/预处理层面(见 session_notes 局限说明)。std::min/max+<algorithm>(见 bugfixes)为无条件通用修复。"
