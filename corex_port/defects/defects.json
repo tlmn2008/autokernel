@@ -1,0 +1,8 @@
+{
+  "schema_version": "1.0",
+  "repo": "autokernel",
+  "target": "BI-V150",
+  "sdk_version": "CoreX 4.5.0.20260630",
+  "defects": [],
+  "notes": "本仓运行期失败用例经判定均为 not-corex(上游/测试自身问题)或 workaround(已解决/平台无关),无 verdict=corex-issue 的疑似 SDK 缺陷簇需升级研发,故 defects 为空。详见 blockers.json。"
+}

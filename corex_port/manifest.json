@@ -37,6 +37,10 @@
       "status": "fixed_local"
     }
   ],
+  "defects_summary": {
+    "count": 0,
+    "high_confidence": 0
+  },
   "github": {
     "fork_url": "https://github.com/tlmn2008/autokernel",
     "branch": "corex-port-guarded",
